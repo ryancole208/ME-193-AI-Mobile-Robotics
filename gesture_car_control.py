@@ -35,16 +35,23 @@ from mediapipe.tasks.python import BaseOptions
 CARD_COLOR = le.LEGO_COLOR_BLUE
 CARD_SERIAL = "3685"
 
-CAMERA_INDEX = 0
+CAMERA_INDEX = 0   # preferred index; tried first, then auto-detected if it fails
+MAX_CAMERA_INDEX = 4  # highest index to probe when the preferred one doesn't work
 MIRROR_PREVIEW = True  # flip the camera image so it behaves like a mirror
 
-DRIVE_SPEED = 80   # forward/backward speed, 0-100
-TURN_SPEED = 30    # left/right turn speed, 0-100
+DRIVE_SPEED = 60   # forward/backward max speed, 0-100
+TURN_SPEED = 10    # left/right turn max speed, 0-100
 
 # Number of consecutive frames a new direction must be seen before it is
 # sent to the car. Filters out single-frame misreads. A fist (stop) always
 # takes effect immediately since it's the safety gesture.
 CONFIRM_FRAMES = 4
+
+# Motors ramp up rather than jumping straight to full speed: a direction
+# starts at RAMP_START_FRACTION of its max speed and reaches full speed
+# after being held continuously for RAMP_UP_SECONDS.
+RAMP_START_FRACTION = 0.3
+RAMP_UP_SECONDS = 1.5
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "hand_landmarker.task")
 MODEL_URL = (
@@ -115,16 +122,53 @@ def draw_landmarks(frame, landmarks):
         cv2.circle(frame, pt, 4, (0, 0, 255), -1)
 
 
-def send_command(car, command):
-    print(f"-> {command}")
+def open_camera(preferred_index=CAMERA_INDEX, max_index=MAX_CAMERA_INDEX):
+    """Open a webcam, preferring `preferred_index` but falling back to
+    scanning other indices. Some indices report as "opened" even though
+    they can't actually deliver frames (e.g. a phantom Continuity Camera
+    entry on macOS), so a successful frame read is required too."""
+    candidates = [preferred_index] + [i for i in range(max_index + 1) if i != preferred_index]
+    for index in candidates:
+        cap = cv2.VideoCapture(index)
+        if cap.isOpened():
+            ok, _ = cap.read()
+            if ok:
+                if index != preferred_index:
+                    print(f"Camera index {preferred_index} unavailable; using index {index} instead.")
+                return cap
+        cap.release()
+    return None
+
+
+def max_speed_for(command):
+    if command in (FORWARD, BACKWARD):
+        return DRIVE_SPEED
+    if command in (LEFT, RIGHT):
+        return TURN_SPEED
+    return 0
+
+
+def ramped_speed(command, held_since):
+    """Speed for `command`, ramping from RAMP_START_FRACTION of its max
+    speed up to full speed the longer it has been continuously held."""
+    max_speed = max_speed_for(command)
+    if held_since is None:
+        return max_speed
+    progress = min(1.0, (time.time() - held_since) / RAMP_UP_SECONDS)
+    start_speed = max_speed * RAMP_START_FRACTION
+    return round(start_speed + (max_speed - start_speed) * progress)
+
+
+def send_command(car, command, speed=0):
+    print(f"-> {command} (speed={speed})")
     if command == FORWARD:
-        car.movement_move(direction=le.MOVEMENT_DIRECTION_FORWARD, speed=DRIVE_SPEED)
+        car.movement_move(direction=le.MOVEMENT_DIRECTION_FORWARD, speed=speed)
     elif command == BACKWARD:
-        car.movement_move(direction=le.MOVEMENT_DIRECTION_BACKWARD, speed=DRIVE_SPEED)
+        car.movement_move(direction=le.MOVEMENT_DIRECTION_BACKWARD, speed=speed)
     elif command == LEFT:
-        car.movement_move(direction=le.MOVEMENT_DIRECTION_LEFT, speed=TURN_SPEED)
+        car.movement_move(direction=le.MOVEMENT_DIRECTION_LEFT, speed=speed)
     elif command == RIGHT:
-        car.movement_move(direction=le.MOVEMENT_DIRECTION_RIGHT, speed=TURN_SPEED)
+        car.movement_move(direction=le.MOVEMENT_DIRECTION_RIGHT, speed=speed)
     elif command == STOP:
         car.movement_stop()
 
@@ -141,9 +185,10 @@ def main():
         return
 
     print("Connected. Starting camera...")
-    cap = cv2.VideoCapture(CAMERA_INDEX)
-    if not cap.isOpened():
-        print("Error: could not open the webcam.")
+    cap = open_camera()
+    if cap is None:
+        print("Error: could not open a webcam. Check camera permissions for "
+              "your terminal/IDE in System Settings > Privacy & Security > Camera.")
         car.disconnect()
         return
 
@@ -158,6 +203,8 @@ def main():
     current_command = STOP
     pending_command = STOP
     pending_count = 0
+    command_start_time = None  # when current_command last changed to a direction
+    last_sent_speed = 0
     start_time = time.time()
 
     try:
@@ -196,7 +243,18 @@ def main():
 
                 if pending_count >= CONFIRM_FRAMES and pending_command != current_command:
                     current_command = pending_command
-                    send_command(car, current_command)
+                    command_start_time = time.time() if current_command != STOP else None
+                    last_sent_speed = None  # force a fresh send below
+
+                if current_command == STOP:
+                    if last_sent_speed != 0:
+                        send_command(car, STOP)
+                        last_sent_speed = 0
+                else:
+                    speed = ramped_speed(current_command, command_start_time)
+                    if speed != last_sent_speed:
+                        send_command(car, current_command, speed)
+                        last_sent_speed = speed
 
                 cv2.putText(frame, f"Command: {current_command}", (10, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)

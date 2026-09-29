@@ -55,7 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from mqttlib import BROKER, MQTTClient  # noqa: E402  (lives in the repo root)
 
 START_TOPIC = "ME193/Rogers"     # "start" and JSON results go here
-DEFAULT_MY_TEAM = "Ryan"         # our name in the JSON "team" field; change with --my-team
+DEFAULT_MY_TEAM = "team"         # our name in the JSON "team" field; change with --my-team
 MSG_START = "start"
 MSG_BALL_CAUGHT = "fail"   # the ball was caught: the goalie wins
 MSG_BALL_SCORED = "goal"   # the ball scored: the goalie loses

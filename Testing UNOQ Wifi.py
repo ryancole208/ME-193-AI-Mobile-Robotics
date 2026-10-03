@@ -10,7 +10,7 @@ from zeroconf import ServiceInfo, Zeroconf
 info = ServiceInfo(
     type_="_arduino._tcp.local.",
     name="RQ-D2._arduino._tcp.local.",
-    addresses=[socket.inet_aton("172.20.10.2")],
+    addresses=[socket.inet_aton("10.5.10.76")],
     port=80,
     server="RQ-D2.local.",
     properties={
@@ -24,7 +24,7 @@ info = ServiceInfo(
 
 zc = Zeroconf()
 zc.register_service(info)
-print("Advertising RQ-D2 (172.20.10.2). Press Ctrl+C to stop.")
+print("Advertising RQ-D2 (10.5.10.76). Press Ctrl+C to stop.")
 try:
     while True:
         time.sleep(1)

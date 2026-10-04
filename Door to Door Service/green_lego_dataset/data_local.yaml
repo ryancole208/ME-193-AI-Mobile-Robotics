@@ -1,6 +1,0 @@
-path: C:/Users/timbe/Github/ME 193 AI Mobile Robotics/Door to Door Service/green_lego_dataset
-train: train/images
-val: valid/images
-test: test/images
-nc: 1
-names: ['Green-Lego']

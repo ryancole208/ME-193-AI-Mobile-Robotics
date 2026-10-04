@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 2
+names: ['Blue-Lego', 'Green-Lego']
+
+roboflow:
+  workspace: timberfallen306-gmail-com
+  project: green-lego
+  version: 2
+  license: Private
+  url: https://app.roboflow.com/timberfallen306-gmail-com/green-lego/2

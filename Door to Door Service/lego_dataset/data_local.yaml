@@ -1,0 +1,8 @@
+names:
+- Blue-Lego
+- Green-Lego
+nc: 2
+path: C:/Users/timbe/Github/ME 193 AI Mobile Robotics/Door to Door Service/lego_dataset
+test: test/images
+train: train/images
+val: valid/images

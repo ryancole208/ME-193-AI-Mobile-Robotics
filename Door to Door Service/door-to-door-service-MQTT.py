@@ -44,7 +44,7 @@ CONF_THRESHOLD = 0.5         # ignore detections less confident than this
 
 HERE = Path(__file__).resolve().parent
 MODEL_PATH = HERE / "lego_minifigs.pt"
-DATASET_ZIP = HERE / "Green-Lego.v2-training-testv2.yolov8.zip"
+DATASET_ZIP = HERE / "Green-Lego.v3-training-testv3.yolov8.zip"
 DATASET_DIR = HERE / "lego_dataset"
 
 CLASSES = {"green": "Green-Lego", "blue": "Blue-Lego"}   # message key -> class name in the dataset

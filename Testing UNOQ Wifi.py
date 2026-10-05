@@ -1,5 +1,5 @@
 """Advertise an Arduino UNO Q over mDNS, equivalent to:
-dns-sd -P "RQ-D2" _arduino._tcp local 80 RQ-D2.local 10.5.12.199 board=unoq ...
+dns-sd -P "RQ-D2" _arduino._tcp local 80 RQ-D2.local 10.5.10.76 board=unoq ...
 Requires: pip install zeroconf
 """
 import socket

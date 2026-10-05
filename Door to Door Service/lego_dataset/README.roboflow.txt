@@ -1,8 +1,8 @@
 
-Green-Lego - v2 Training TestV2
+Green-Lego - v3 Training TestV3
 ==============================
 
-This dataset was exported via roboflow.com on October 3, 2026 at 11:38 PM GMT
+This dataset was exported via roboflow.com on October 4, 2026 at 11:21 PM GMT
 
 Roboflow is an end-to-end computer vision platform that helps you
 * collaborate with your team on computer vision projects
@@ -17,7 +17,7 @@ visit https://github.com/roboflow/notebooks
 
 To find over 100k other datasets and pre-trained models, visit https://universe.roboflow.com
 
-The dataset includes 180 images.
+The dataset includes 211 images.
 Green-Lego are annotated in YOLOv8 format.
 
 The following pre-processing was applied to each image:

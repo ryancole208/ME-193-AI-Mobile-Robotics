@@ -20,6 +20,8 @@ A minifig that isn't seen is sent as {"found": false, "w": 640, "h": 480}.
 Usage:
     python door-to-door-service-MQTT.py            # run the camera and publish
     python door-to-door-service-MQTT.py --train    # (re)train the model from the dataset zip
+    python door-to-door-service-MQTT.py --list-cameras   # find a second/external camera's index
+    python door-to-door-service-MQTT.py --camera 1       # use that camera instead of the default
 Press q in the camera window to quit.
 """
 
@@ -41,6 +43,7 @@ MQTT_TOPIC = "ME193/RQ-D2"   # base topic; each color publishes to MQTT_TOPIC/gr
 PUBLISH_HZ = 10              # max MQTT messages per second, so the broker isn't flooded
 CAMERA_INDEX = 0             # 0 is the built-in laptop camera
 CONF_THRESHOLD = 0.5         # ignore detections less confident than this
+BROKER = "broker.hivemq.com"
 
 HERE = Path(__file__).resolve().parent
 MODEL_PATH = HERE / "lego_minifigs.pt"
@@ -113,17 +116,33 @@ def build_messages(dets, w, h):
     return msgs
 
 
-def run(show):
+def list_cameras(max_index=5):
+    """Probe camera indices 0..max_index and print which ones open (and at
+    what resolution), so you can tell a built-in camera apart from an
+    external/back-facing one without guessing indices."""
+    for index in range(max_index + 1):
+        cap = cv2.VideoCapture(index)
+        if cap.isOpened():
+            ok, frame = cap.read()
+            if ok:
+                h, w = frame.shape[:2]
+                print(f"{index}: available ({w}x{h})")
+            else:
+                print(f"{index}: opens but no frame grabbed")
+        cap.release()
+
+
+def run(show, camera_index):
     if not MODEL_PATH.exists():
         sys.exit(f"No model at {MODEL_PATH}. Run with --train first.")
     model = YOLO(str(MODEL_PATH))
 
-    cap = cv2.VideoCapture(CAMERA_INDEX)
+    cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
-        sys.exit(f"Could not open camera {CAMERA_INDEX}.")
+        sys.exit(f"Could not open camera {camera_index}. Try --list-cameras to see what's available.")
 
     print(f"Connecting to MQTT broker {BROKER}...")
-    with MQTTClient() as mqtt:
+    with MQTTClient(broker=BROKER) as mqtt:
         topics = {key: f"{MQTT_TOPIC}/{key}" for key in CLASSES}
         print(f"Publishing minifig positions to {', '.join(topics.values())}. Press q in the window to quit.")
         last_publish = 0.0
@@ -174,9 +193,15 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=100, help="training epochs (default 100)")
     parser.add_argument("--imgsz", type=int, default=640, help="training image size (default 640)")
     parser.add_argument("--no-window", action="store_true", help="don't show the camera preview window")
+    parser.add_argument("--camera", type=int, default=CAMERA_INDEX,
+                        help=f"camera device index (default {CAMERA_INDEX}; use --list-cameras to find others)")
+    parser.add_argument("--list-cameras", action="store_true",
+                        help="probe camera indices and print which ones are available, then exit")
     args = parser.parse_args()
 
-    if args.train:
+    if args.list_cameras:
+        list_cameras()
+    elif args.train:
         train(args.epochs, args.imgsz)
     else:
-        run(show=not args.no_window)
+        run(show=not args.no_window, camera_index=args.camera)

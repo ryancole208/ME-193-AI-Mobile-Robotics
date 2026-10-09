@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://dckb8ind4xdkd"]
+
+[node name="Node2D" type="Node2D" unique_id=1249638101]
+visible = false

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dj2gyglv6tapf"
+path="res://.godot/imported/Cut and Dry.mp3-f75f8505e4f254bc493ad5f54239a7e0.mp3str"
+
+[deps]
+
+source_file="res://audio/music/Cut and Dry.mp3"
+dest_files=["res://.godot/imported/Cut and Dry.mp3-f75f8505e4f254bc493ad5f54239a7e0.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,22 @@
+{
+  "song": "Pinball_Spring_160.wav",
+  "title": "Pinball Spring 160",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+    "title": "Pinball Spring 160",
+    "artist": "Kevin MacLeod",
+    "source": "incompetech.com",
+    "license": "Creative Commons: By Attribution 4.0 License",
+    "license_url": "http://creativecommons.org/licenses/by/4.0/",
+    "credit": "\"Pinball Spring 160\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 27.9,
+  "tempo": [
+    {"beat": 0, "bpm": 160.0}
+  ],
+  "downbeat": 2,
+  "start_bar": 3,
+  "end_bar": 111,
+  "pattern": [4],
+  "sections": []
+}

@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dtshvxvphkcft"]
+
+[node name="Stage" type="Node2D" unique_id=811980437]
+
+[node name="background" type="ColorRect" parent="." unique_id=1395656788]
+offset_right = 384.0
+offset_bottom = 216.0
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Floor" type="ColorRect" parent="." unique_id=981481852]
+offset_top = 130.0
+offset_right = 384.0
+offset_bottom = 216.0
+color = Color(0.67058825, 0.32156864, 0.21176471, 1)
+
+[node name="CurtainLeft" type="ColorRect" parent="." unique_id=1829080983]
+offset_right = 40.0
+offset_bottom = 216.0
+color = Color(0.49411765, 0.14509805, 0.3254902, 1)
+
+[node name="CurtainRight" type="ColorRect" parent="." unique_id=1372177960]
+offset_left = 344.0
+offset_right = 384.0
+offset_bottom = 216.0
+color = Color(0.49411765, 0.14509805, 0.3254902, 1)
+
+[node name="CurtainTop" type="ColorRect" parent="." unique_id=352586465]
+offset_right = 384.0
+offset_bottom = 20.0
+color = Color(0.49411765, 0.14509805, 0.3254902, 1)

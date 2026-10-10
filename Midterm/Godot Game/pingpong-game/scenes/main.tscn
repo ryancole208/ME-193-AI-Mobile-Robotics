@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://dckb8ind4xdkd"]
+
+[ext_resource type="PackedScene" uid="uid://dyor0ru7gxxml" path="res://scenes/player_paddle.tscn" id="1_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://cmclhwimh4eyw" path="res://scenes/opponent_paddle.tscn" id="3_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://cfnf4osec27yd" path="res://art/ball.png" id="3_sugp2"]
+
+[node name="Main" type="Node2D" unique_id=1249638101]
+
+[node name="background" type="ColorRect" parent="." unique_id=1608417266]
+offset_right = 384.0
+offset_bottom = 216.0
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Table" type="Polygon2D" parent="." unique_id=1851300353]
+color = Color(0, 0.5294118, 0.31764707, 1)
+polygon = PackedVector2Array(132, 110, 252, 110, 312, 200, 72, 200)
+
+[node name="paddle" parent="." unique_id=1153872660 instance=ExtResource("1_0wfyh")]
+position = Vector2(192, 200)
+
+[node name="Ball" type="Sprite2D" parent="." unique_id=1377430167]
+position = Vector2(59, 77)
+texture = ExtResource("3_sugp2")
+
+[node name="OpponentPaddle" parent="." unique_id=2079362082 instance=ExtResource("3_jyhfs")]
+position = Vector2(192, 95)

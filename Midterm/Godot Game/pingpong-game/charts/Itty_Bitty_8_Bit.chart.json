@@ -1,5 +1,5 @@
 {
-  "song": "Itty_Bitty_8_Bit.wav",
+  "song": "Itty Bitty 8 Bit.mp3",
   "title": "Itty Bitty 8 Bit",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,7 +15,7 @@
 	{"beat": 0, "bpm": 108}
   ],
   "downbeat": 0,
-  "start_bar": 3,
+  "start_bar": 1,
   "end_bar": 87,
   "pattern": [4],
   "sections": []

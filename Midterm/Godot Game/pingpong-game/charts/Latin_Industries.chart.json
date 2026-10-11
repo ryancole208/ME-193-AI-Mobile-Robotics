@@ -1,5 +1,5 @@
 {
-  "song": "Latin_Industries.wav",
+  "song": "Latin Industries.mp3",
   "title": "Latin Industries",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,7 +15,7 @@
 	{"beat": 2, "bpm": 122}
   ],
   "downbeat": 2,
-  "start_bar": 3,
+  "start_bar": 1,
   "end_bar": 100,
   "pattern": [4],
   "sections": []

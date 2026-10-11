@@ -12,27 +12,45 @@ var song_position: float = 0.0
 var output_latency: float = 0.0
 var tempo_map: Array[Dictionary] = []
 @export var debug_start_bar: int = 0
+@export var count_in_beats: int = 4
+var start_time: float = 0.0
+var counting_in: bool = false
+var count_in_start_usec: int = 0
+var count_in_start_time: float = 0.0
+var music_start_beat: int = 0
+
 
 func _ready() -> void:
+	chart_path = GameState.chart_path
 	output_latency = AudioServer.get_output_latency()
 	chart = load_chart(chart_path)
+	stream = load("res://audio/music/" + chart["song"].get_basename() + ".mp3")
 	offset = chart["offset_ms"] / 1000.0
 	downbeat = int(chart["downbeat"])
 	build_tempo_map(chart["tempo"])
-	var start_time: float = 0.0
+	start_time = 0.0
 	if debug_start_bar > 0:
 		start_time = beat_to_seconds(bar_to_beat(debug_start_bar))
-	play(start_time)
+	start_count_in()
 
 
 func _process(_delta: float) -> void:
-	if playing:
+	if counting_in:
+		var clock: float = count_in_start_time \
+			+ (Time.get_ticks_usec() - count_in_start_usec) / 1_000_000.0
+		song_position = clock - output_latency
+		if clock >= start_time:
+			counting_in = false
+			play(start_time)
+	elif playing:
 		song_position = get_playback_position() \
 			+ AudioServer.get_time_since_last_mix() - output_latency
-		var current_beat: int = floori(seconds_to_beat(song_position))
-		if current_beat > last_beat:
-			last_beat = current_beat
-			beat.emit(current_beat, posmod(current_beat - downbeat, 4))
+	else:
+		return
+	var current_beat: int = floori(seconds_to_beat(song_position))
+	if current_beat > last_beat:
+		last_beat = current_beat
+		beat.emit(current_beat, posmod(current_beat - downbeat, 4))
 
 func load_chart(path: String) -> Dictionary:
 	var text: String = FileAccess.get_file_as_string(path)
@@ -73,3 +91,14 @@ func beat_to_seconds(b: float) -> float:
 
 func bar_to_beat(bar: int) -> float:
 	return downbeat + (bar - 1) * 4.0
+	
+	
+	
+func start_count_in() -> void:
+	var first_beat: int = ceili(seconds_to_beat(start_time))
+	music_start_beat = first_beat
+	var first_click: int = first_beat - count_in_beats
+	count_in_start_time = beat_to_seconds(first_click) - 0.05
+	last_beat = first_click - 1
+	count_in_start_usec = Time.get_ticks_usec()
+	counting_in = true

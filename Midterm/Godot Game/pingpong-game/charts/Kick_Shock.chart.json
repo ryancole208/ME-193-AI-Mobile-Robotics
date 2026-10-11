@@ -1,5 +1,5 @@
 {
-  "song": "Kick_Shock.wav",
+  "song": "Kick Shock.mp3",
   "title": "Kick Shock",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,7 +15,7 @@
 	{"beat": 0, "bpm": 138}
   ],
   "downbeat": 0,
-  "start_bar": 3,
+  "start_bar": 1,
   "end_bar": 34,
   "pattern": [4],
   "sections": []

@@ -1,0 +1,29 @@
+[gd_resource type="Theme" format=3 uid="uid://mnfmogtwy4xf"]
+
+[ext_resource type="FontFile" uid="uid://dq0w0uvbeo0yt" path="res://fonts/PixelOperator8.ttf" id="1_sesux"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hurb1"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.9254902, 0.15294118, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_f81p6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6pb4g"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_btmhf"]
+
+[resource]
+default_font = ExtResource("1_sesux")
+default_font_size = 8
+Button/colors/font_color = Color(0.7607843, 0.7647059, 0.78039217, 1)
+Button/colors/font_focus_color = Color(1, 0.9254902, 0.15294118, 1)
+Button/colors/font_hover_color = Color(1, 0.9254902, 0.15294118, 1)
+Button/styles/focus = SubResource("StyleBoxFlat_hurb1")
+Button/styles/hover = SubResource("StyleBoxEmpty_f81p6")
+Button/styles/normal = SubResource("StyleBoxEmpty_6pb4g")
+Button/styles/pressed = SubResource("StyleBoxEmpty_btmhf")

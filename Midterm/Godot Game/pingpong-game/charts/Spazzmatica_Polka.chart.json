@@ -1,5 +1,5 @@
 {
-  "song": "Spazzmatica_Polka.wav",
+  "song": "Spazzmatica Polka.mp3",
   "title": "Spazzmatica Polka",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,7 +15,7 @@
 	{"beat": 0, "bpm": 140}
   ],
   "downbeat": 0,
-  "start_bar": 3,
+  "start_bar": 1,
   "end_bar": 55,
   "pattern": [4],
   "sections": []

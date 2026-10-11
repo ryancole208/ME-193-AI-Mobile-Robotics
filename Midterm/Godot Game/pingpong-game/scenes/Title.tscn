@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://cjtov6b4lsals"]
+
+[ext_resource type="Script" uid="uid://dev18qro4osx5" path="res://scripts/title.gd" id="1_lq0lj"]
+[ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="2_2sdm5"]
+
+[node name="Title" type="Control" unique_id=216055253]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lq0lj")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1677462967]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Center" type="VBoxContainer" parent="." unique_id=1553112947]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -112.0
+offset_top = -28.0
+offset_right = 112.0
+offset_bottom = 28.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="GameTitle" type="Label" parent="Center" unique_id=1457627635]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_fonts/font = ExtResource("2_2sdm5")
+theme_override_font_sizes/font_size = 32
+text = "Ping Pong Midterm"
+
+[node name="Prompt" type="Label" parent="Center" unique_id=2019947210]
+layout_mode = 2
+text = "Enter: Play       C: Credits"

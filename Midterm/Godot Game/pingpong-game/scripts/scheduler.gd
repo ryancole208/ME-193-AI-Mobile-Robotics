@@ -19,8 +19,13 @@ signal judged(grade: String, offset_ms: float)
 @export var miss_grace_ms: float = 120.0
 @export var paddle: Node2D
 @export var aim_tolerance_px: float = 15.0
-
-
+signal opponent_hit
+var next_sfx: int = 0
+@export var sfx_lead_ms: float = 50.0
+signal player_hit
+signal cue
+var cues: Array[float] = []
+var next_cue: int = 0
 
 func _ready() -> void:
 	build_hits()
@@ -34,12 +39,13 @@ func _process(_delta: float) -> void:
 			h["judged"] = true
 			h["grade"] = "Miss"
 			judged.emit("Miss", 0.0)
-			print("Miss")
+			
 	while flight < hits.size() - 2 and now >= hits[flight + 1]["time"]:
 		flight += 1
 	var a: Dictionary = hits[flight]
 	var b: Dictionary = hits[flight + 1]
-	var t: float = clampf(inverse_lerp(a["time"], b["time"], now), 0.0, 1.0)
+	var start_time: float = a.get("hit_time", a["time"])
+	var t: float = clampf(inverse_lerp(start_time, b["time"], now), 0.0, 1.0)
 	if a["by"] == "player" and not a["judged"]:
 		t = 0.0
 	var from: Vector2 = spot_for(a)
@@ -67,12 +73,19 @@ func _process(_delta: float) -> void:
 	var missed: bool = a.get("grade", "") == "Miss" \
 		or (not a["judged"] and now > a["time"] + good_window_ms / 1000.0)
 	ball.visible = a["by"] == "opponent" or not missed
+	#Sound Effects
+	var sound_time: float = now + conductor.output_latency + sfx_lead_ms / 1000.0
+	while next_sfx < hits.size() and sound_time >= hits[next_sfx]["time"]:
+		var h: Dictionary = hits[next_sfx]
+		if h["by"] == "opponent" and sound_time - h["time"] < 0.1:
+			opponent_hit.emit()
+		next_sfx += 1
+	while next_cue < cues.size() and sound_time >= cues[next_cue]:
+		if sound_time - cues[next_cue] < 0.1:
+			cue.emit()
+		next_cue += 1
 
-func pattern_for_bar(bar: int) -> Array:
-	for section in conductor.chart["sections"]:
-		if bar >= section["bars"][0] and bar <= section["bars"][1]:
-			return section["pattern"]
-	return conductor.chart["pattern"]
+
 
 func build_hits() -> void:
 	hits.clear()
@@ -80,7 +93,7 @@ func build_hits() -> void:
 	var last_bar: int = int(conductor.chart["end_bar"])
 	for bar in range(first_bar, last_bar + 1):
 		var start: float = conductor.bar_to_beat(bar)
-		if pattern_for_bar(bar).size() == 1:
+		if ChartTools.pattern_for_bar(conductor.chart, bar).size() == 1:
 			hits.append({"beat": start + 1.0, "by": "opponent"})
 			hits.append({"beat": start + 3.0, "by": "player"})
 		else:
@@ -93,6 +106,11 @@ func build_hits() -> void:
 		var r: Vector2 = player_x_range if h["by"] == "player" else opponent_x_range
 		h["x"] = rng.randf_range(r.x, r.y)
 		h["judged"] = false
+	cues.clear()
+	for bar in range(first_bar, last_bar):
+		if ChartTools.pattern_for_bar(conductor.chart, bar).size() == 1 \
+				and ChartTools.pattern_for_bar(conductor.chart, bar + 1).size() == 2:
+			cues.append(conductor.beat_to_seconds(conductor.bar_to_beat(bar)))
 
 func spot_for(hit: Dictionary) -> Vector2:
 	var y: float = opponent_spot.y if hit["by"] == "opponent" else player_spot.y
@@ -119,5 +137,14 @@ func _on_paddle_swung() -> void:
 	if absf(blade_x - hits[best]["x"]) > aim_tolerance_px:
 		grade = "Miss"
 	hits[best]["grade"] = grade
+	hits[best]["hit_time"] = now
 	judged.emit(grade, ms)
-	print(grade, " ", roundi(ms))
+	if grade != "Miss":
+		var wait: float = hits[best]["time"] - now \
+			- conductor.output_latency - sfx_lead_ms / 1000.0
+		play_player_hit(wait)
+
+func play_player_hit(wait: float) -> void:
+	if wait > 0.0:
+		await get_tree().create_timer(wait).timeout
+	player_hit.emit()

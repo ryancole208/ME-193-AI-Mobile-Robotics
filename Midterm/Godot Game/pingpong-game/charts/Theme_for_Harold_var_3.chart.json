@@ -1,5 +1,5 @@
 {
-  "song": "Theme_for_Harold_var_3.wav",
+  "song": "Theme for Harold var 3.mp3",
   "title": "Theme for Harold var 3",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,8 +15,12 @@
 	{"beat": 0, "bpm": 178}
   ],
   "downbeat": 1,
-  "start_bar": 3,
-  "end_bar": 55,
-  "pattern": [2,4],
-  "sections": []
+  "start_bar": 1,
+  "end_bar": 56,
+  "pattern": [4],
+	 "sections": [
+	{"bars": [9, 16], "pattern": [2, 4]},
+	{"bars": [25, 32], "pattern": [2, 4]},
+	{"bars": [49, 56], "pattern": [2, 4]}
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "song": "Cut_and_Dry.wav",
+  "song": "Cut and Dry.mp3",
   "title": "Cut and Dry",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -15,7 +15,7 @@
 	{"beat": 0, "bpm": 122}
   ],
   "downbeat": 0,
-  "start_bar": 3,
+  "start_bar": 1,
   "end_bar": 111,
   "pattern": [4],
   "sections": []

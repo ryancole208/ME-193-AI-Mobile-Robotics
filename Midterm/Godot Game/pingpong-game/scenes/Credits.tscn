@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://cvrfi6to11xjh"]
+
+[ext_resource type="Script" uid="uid://b6k1vy86k12p5" path="res://scenes/credits.gd" id="1_hi4w3"]
+
+[node name="Credits" type="Control" unique_id=288643305]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hi4w3")
+
+[node name="Background" type="ColorRect" parent="." unique_id=997520440]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Scroll" type="ScrollContainer" parent="." unique_id=3276112]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 384.0
+offset_bottom = 198.0
+horizontal_scroll_mode = 0
+
+[node name="Text" type="Label" parent="Scroll" unique_id=987770214]
+custom_minimum_size = Vector2(368, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 2
+
+[node name="Prompt" type="Label" parent="." unique_id=366200075]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -113.0
+offset_top = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "ESC: BACK TO TITLE"
+horizontal_alignment = 1

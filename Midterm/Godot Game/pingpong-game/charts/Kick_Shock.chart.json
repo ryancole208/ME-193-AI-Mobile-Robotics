@@ -3,18 +3,18 @@
   "title": "Kick Shock",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
-    "title": "Kick Shock",
-    "artist": "Kevin MacLeod",
-    "source": "incompetech.com",
-    "license": "Creative Commons: By Attribution 4.0 License",
-    "license_url": "http://creativecommons.org/licenses/by/4.0/",
-    "credit": "\"Kick Shock\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+	"title": "Kick Shock",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Kick Shock\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
   },
   "offset_ms": 31.1,
   "tempo": [
-    {"beat": 0, "bpm": 138.014}
+	{"beat": 0, "bpm": 138}
   ],
-  "downbeat": 2,
+  "downbeat": 0,
   "start_bar": 3,
   "end_bar": 34,
   "pattern": [4],

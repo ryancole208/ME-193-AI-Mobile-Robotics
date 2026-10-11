@@ -12,9 +12,9 @@
   },
   "offset_ms": 29.0,
   "tempo": [
-	{"beat": 0, "bpm": 176.016}
+	{"beat": 0, "bpm": 178}
   ],
-  "downbeat": 0,
+  "downbeat": 1,
   "start_bar": 3,
   "end_bar": 55,
   "pattern": [2,4],

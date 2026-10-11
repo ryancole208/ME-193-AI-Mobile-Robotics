@@ -4,9 +4,10 @@
 [ext_resource type="PackedScene" uid="uid://dtshvxvphkcft" path="res://scenes/stage.tscn" id="1_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://cmclhwimh4eyw" path="res://scenes/opponent_paddle.tscn" id="3_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://bmooh24vgttdp" path="res://scenes/ball.tscn" id="4_jyhfs"]
-[ext_resource type="AudioStream" uid="uid://bj0auhyy4dkoc" path="res://audio/music/Latin Industries.mp3" id="5_o6xl0"]
-[ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scenes/conductor.gd" id="6_tefeu"]
-[ext_resource type="Script" uid="uid://dvr3m2jw42q64" path="res://scenes/beat_light.gd" id="7_o6xl0"]
+[ext_resource type="AudioStream" uid="uid://bma4b5xkk0c20" path="res://audio/music/Spazzmatica Polka.mp3" id="5_tipki"]
+[ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scripts/conductor.gd" id="6_tefeu"]
+[ext_resource type="Script" uid="uid://dvr3m2jw42q64" path="res://scripts/beat_light.gd" id="7_o6xl0"]
+[ext_resource type="Script" uid="uid://b7rrhyoqsae1y" path="res://scripts/scheduler.gd" id="8_tipki"]
 
 [node name="Main" type="Node2D" unique_id=1249638101]
 
@@ -26,10 +27,10 @@ position = Vector2(192, 95)
 position = Vector2(192, 150)
 
 [node name="Conductor" type="AudioStreamPlayer" parent="." unique_id=519899952]
-stream = ExtResource("5_o6xl0")
+stream = ExtResource("5_tipki")
 autoplay = true
 script = ExtResource("6_tefeu")
-chart_path = "res://charts/Latin_Industries.chart.json"
+chart_path = "res://charts/Spazzmatica_Polka.chart.json"
 
 [node name="BeatLight" type="ColorRect" parent="." unique_id=292588354]
 offset_left = 4.0
@@ -37,5 +38,11 @@ offset_top = 4.0
 offset_right = 12.0
 offset_bottom = 12.0
 script = ExtResource("7_o6xl0")
+
+[node name="Scheduler" type="Node" parent="." unique_id=945815629 node_paths=PackedStringArray("conductor", "ball")]
+script = ExtResource("8_tipki")
+conductor = NodePath("../Conductor")
+ball = NodePath("../Ball")
+opponent_spot = Vector2(192, 112)
 
 [connection signal="beat" from="Conductor" to="BeatLight" method="_on_conductor_beat"]

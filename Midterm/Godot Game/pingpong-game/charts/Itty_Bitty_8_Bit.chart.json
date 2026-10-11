@@ -3,16 +3,16 @@
   "title": "Itty Bitty 8 Bit",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
-    "title": "Itty Bitty 8 Bit",
-    "artist": "Kevin MacLeod",
-    "source": "incompetech.com",
-    "license": "Creative Commons: By Attribution 4.0 License",
-    "license_url": "http://creativecommons.org/licenses/by/4.0/",
-    "credit": "\"Itty Bitty 8 Bit\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+	"title": "Itty Bitty 8 Bit",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Itty Bitty 8 Bit\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
   },
   "offset_ms": 26.7,
   "tempo": [
-    {"beat": 0, "bpm": 109.001}
+	{"beat": 0, "bpm": 108}
   ],
   "downbeat": 0,
   "start_bar": 3,

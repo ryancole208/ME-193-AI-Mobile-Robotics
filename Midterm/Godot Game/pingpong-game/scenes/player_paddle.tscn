@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dyor0ru7gxxml"]
 
 [ext_resource type="Texture2D" uid="uid://6hrwa0rgs4dv" path="res://art/paddle_yellow.png" id="1_uktar"]
-[ext_resource type="Script" uid="uid://bn2fup36axqwm" path="res://scenes/paddle.gd" id="2_kxuup"]
+[ext_resource type="Script" uid="uid://bn2fup36axqwm" path="res://scripts/paddle.gd" id="2_kxuup"]
 [ext_resource type="Texture2D" uid="uid://b347grrbeh3by" path="res://art/paddle_black.png" id="3_kxuup"]
 
 [node name="paddle" type="Sprite2D" unique_id=1153872660]

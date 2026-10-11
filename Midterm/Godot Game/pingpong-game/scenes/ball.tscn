@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bmooh24vgttdp"]
 
-[ext_resource type="Texture2D" uid="uid://cfnf4osec27yd" path="res://art/ball.png" id="1_7s4qf"]
+[ext_resource type="Texture2D" uid="uid://bf525ovqntqu3" path="res://art/ball_scenes.png" id="1_7s4qf"]
 
 [node name="Ball" type="Node2D" unique_id=1988265923]
 
@@ -14,3 +14,4 @@ color = Color(0.11372549, 0.16862746, 0.3254902, 1)
 [node name="Sprite" type="Sprite2D" parent="." unique_id=1615960514]
 position = Vector2(0, -20)
 texture = ExtResource("1_7s4qf")
+hframes = 5

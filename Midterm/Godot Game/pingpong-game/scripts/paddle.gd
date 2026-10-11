@@ -1,5 +1,5 @@
 extends Sprite2D
-
+signal swung
 @export var speed: float = 300.0
 @export var min_x: float = 72.0
 @export var max_x: float = 312.0
@@ -13,7 +13,7 @@ func _process(delta: float) -> void:
 	position.x += direction * speed * delta
 	position.x = clampf(position.x, min_x, max_x)
 	if Input.is_action_just_pressed("swing"):
-		print("Swing!")
+		swung.emit()
 	if Input.is_action_just_pressed("flip_face"):
 		set_yellow_facing(not yellow_facing)
 	var roll_input: float = Input.get_axis("roll_left", "roll_right")

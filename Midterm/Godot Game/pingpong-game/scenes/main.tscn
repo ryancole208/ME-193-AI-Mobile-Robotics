@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scripts/conductor.gd" id="6_tefeu"]
 [ext_resource type="Script" uid="uid://dvr3m2jw42q64" path="res://scripts/beat_light.gd" id="7_o6xl0"]
 [ext_resource type="Script" uid="uid://b7rrhyoqsae1y" path="res://scripts/scheduler.gd" id="8_tipki"]
+[ext_resource type="Script" uid="uid://dwpkue2lburn2" path="res://scenes/score_label.gd" id="9_85g3d"]
 
 [node name="Main" type="Node2D" unique_id=1249638101]
 
@@ -17,14 +18,14 @@
 color = Color(0, 0.5294118, 0.31764707, 1)
 polygon = PackedVector2Array(132, 110, 252, 110, 312, 200, 72, 200)
 
-[node name="paddle" parent="." unique_id=1153872660 instance=ExtResource("1_0wfyh")]
-position = Vector2(192, 200)
-
 [node name="OpponentPaddle" parent="." unique_id=2079362082 instance=ExtResource("3_jyhfs")]
-position = Vector2(192, 95)
+position = Vector2(192, 108)
 
 [node name="Ball" parent="." unique_id=1988265923 instance=ExtResource("4_jyhfs")]
 position = Vector2(192, 150)
+
+[node name="paddle" parent="." unique_id=1153872660 instance=ExtResource("1_0wfyh")]
+position = Vector2(192, 200)
 
 [node name="Conductor" type="AudioStreamPlayer" parent="." unique_id=519899952]
 stream = ExtResource("5_tipki")
@@ -39,10 +40,19 @@ offset_right = 12.0
 offset_bottom = 12.0
 script = ExtResource("7_o6xl0")
 
-[node name="Scheduler" type="Node" parent="." unique_id=945815629 node_paths=PackedStringArray("conductor", "ball")]
+[node name="Scheduler" type="Node" parent="." unique_id=945815629 node_paths=PackedStringArray("conductor", "ball", "opponent", "paddle")]
 script = ExtResource("8_tipki")
 conductor = NodePath("../Conductor")
 ball = NodePath("../Ball")
 opponent_spot = Vector2(192, 112)
+opponent = NodePath("../OpponentPaddle")
+paddle = NodePath("../paddle")
 
+[node name="ScoreLabel" type="Label" parent="." unique_id=1775185815]
+offset_right = 300.0
+offset_bottom = 24.0
+script = ExtResource("9_85g3d")
+
+[connection signal="swung" from="paddle" to="Scheduler" method="_on_paddle_swung"]
 [connection signal="beat" from="Conductor" to="BeatLight" method="_on_conductor_beat"]
+[connection signal="judged" from="Scheduler" to="ScoreLabel" method="_on_scheduler_judged"]

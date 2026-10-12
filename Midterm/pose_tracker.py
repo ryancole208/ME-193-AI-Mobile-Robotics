@@ -149,10 +149,13 @@ def ensure_model(path=config.POSE_MODEL_PATH, url=config.POSE_MODEL_URL):
 
 
 class PoseTracker:
-    def __init__(self, hand=config.DOMINANT_HAND):
+    def __init__(self, hand=config.DOMINANT_HAND, on_frame=None):
+        """on_frame(t, bgr_frame), optional: called on the camera thread with every raw (unmirrored)
+        frame, so another reader (the rhythm bridge's tag scanner) can share the webcam. Keep it quick."""
         if hand not in TRACKED:
             raise ValueError(f"DOMINANT_HAND must be 'left' or 'right', got {hand!r}")
         self.hand = hand
+        self.on_frame = on_frame
         self.status = "idle"
         self.fps = 0.0
         self._lock = threading.Lock()
@@ -255,6 +258,8 @@ class PoseTracker:
                         time.sleep(0.05)
                         continue
                     t = time.monotonic()
+                    if self.on_frame is not None:
+                        self.on_frame(t, frame)
                     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     ts_ms = max(int(t * 1000), last_ts_ms + 1)  # must strictly increase
                     last_ts_ms = ts_ms

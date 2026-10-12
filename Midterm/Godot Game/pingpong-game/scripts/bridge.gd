@@ -7,9 +7,11 @@ var udp := PacketPeerUDP.new()
 signal state_received(x: float, roll: float, face: String)
 signal swing_received(age_s: float, strength: float)
 signal status_received(motor: bool, pose: bool)
+signal tag_received(id: int)
 
 var last_state_msec: int = -100000
 var last_status_msec: int = -100000
+var current_tag: int = -1
 var status_label := Label.new()
 
 func is_active() -> bool:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	status_label.add_theme_constant_override("outline_size", 1)
 	layer.add_child(status_label)
 	status_received.connect(_on_status)
+	
 
 func _process(_delta: float) -> void:
 	while udp.get_available_packet_count() > 0:
@@ -49,6 +52,9 @@ func handle(msg: Dictionary) -> void:
 			swing_received.emit(float(msg.get("age_ms", 0.0)) / 1000.0, float(msg.get("strength", 0.0)))
 		"status":
 			status_received.emit(bool(msg["motor"]), bool(msg["pose"]))
+		"tag":
+			tag_received.emit(int(msg.get("id", -1)))
+			tag_received.emit(current_tag)
 
 func send(msg: Dictionary) -> void:
 	out.put_packet(JSON.stringify(msg).to_utf8_buffer())

@@ -5,13 +5,21 @@ Packets are JSON over UDP on localhost; ports, rates and flags are in bridge_con
     python bridge.py                           # motor + webcam + MQTT
     python bridge.py --no-pose                 # motor only (x stays 0.5)
     python bridge.py --no-motor                # webcam only (roll 0, face black)
+    python bridge.py --no-pose --no-motor      # AprilTags only (the tag scanner opens the webcam)
     python bridge.py --no-hardware             # no motor, no webcam: status packets only
-    add --no-mqtt to any of them to leave the network alone
+    add --no-mqtt / --no-tags / --no-display to any of them to leave the network / the AprilTags /
+    the camera view window alone
+
+The camera view window shows the mirrored webcam image with the pose overlay (as in the other
+games) and every detected tag's outline and ID, whenever the webcam is in use.
 
 Python -> Godot (GODOT_PORT):
     {"type":"state","x":0-1,"roll":<calmed deg>,"face":"black"|"yellow"}   STATE_RATE_HZ
     {"type":"swing","strength":<float>,"age_ms":<ms from the swing peak to the send>}   each swing
-    {"type":"status","motor":<calibrated>,"pose":<person tracked>}   every STATUS_INTERVAL_S
+    {"type":"tag","id":<int>}   once when an allowed tag16h5 tag becomes stable (song selection)
+    {"type":"tag","id":-1}      once when no stable tag has been seen for TAG_LOST_S
+    {"type":"status","motor":<calibrated>,"pose":<person tracked>,"tag":<stable ID or -1>}
+                                every STATUS_INTERVAL_S (the tag is repeated here, so Godot never misses it)
 
 Godot -> Python (BRIDGE_PORT), each printed on one line; malformed packets are ignored:
     {"type":"zero"}     re-zero the roll (like C in rhythm_main); ignored until the motor is calibrated
@@ -62,6 +70,8 @@ def parse_args(argv=None):
     p.add_argument("--no-motor", action="store_true", help="don't connect to the Double Motor")
     p.add_argument("--no-pose", action="store_true", help="don't open the webcam")
     p.add_argument("--no-mqtt", action="store_true", help="don't touch the network")
+    p.add_argument("--no-tags", action="store_true", help="no AprilTag song selection")
+    p.add_argument("--no-display", action="store_true", help="no camera view window")
     return p.parse_args(argv)
 
 
@@ -123,7 +133,8 @@ def parse_command(data):
 class Bridge:
     """Turns the motor / pose threads into packets. motor and pose may be None (disabled)."""
 
-    def __init__(self, motor=None, pose=None, *, godot=None, swing_link=None, publish_score=None):
+    def __init__(self, motor=None, pose=None, *, godot=None, swing_link=None, publish_score=None,
+                 tags=None, tag_link=None):
         import config
         self.config = config
         self.motor = motor
@@ -131,6 +142,8 @@ class Bridge:
         self.godot = godot or UdpSender(bc.GODOT_HOST, bc.GODOT_PORT)
         # Swings are sent from the motor's BLE thread: their own socket, never shared across threads.
         self.swing_link = swing_link or UdpSender(bc.GODOT_HOST, bc.GODOT_PORT)
+        self.tags = tags                  # TagScanner or None
+        self.tag_link = tag_link or UdpSender(bc.GODOT_HOST, bc.GODOT_PORT)   # the scanner thread's own socket
         self.roll_display = None
         if motor is not None:
             from rhythm_motor import RollDisplay
@@ -151,6 +164,16 @@ class Bridge:
                                      "age_ms": round(age_ms, 1)})
         if data is not None and bc.PRINT_SENDS:
             print(f"[swing] {data.decode('utf-8')}")
+
+    # -- tag scanner thread -----------------------------------------------------
+    def on_tag(self, tag_id, tag_filter=None):
+        """A tag event from TagFilter: send it once, print one line."""
+        self.tag_link.send({"type": "tag", "id": tag_id})
+        if tag_id == -1:
+            print(f"[tag] lost (no stable tag for {bc.TAG_LOST_S:g} s) -> sent id -1")
+        else:
+            side = getattr(tag_filter, "last_side_px", None)
+            print(f"[tag] stable {tag_id}" + (f" (side {side:.0f} px)" if side else "") + f" -> sent id {tag_id}")
 
     # -- main thread ------------------------------------------------------------
     def zero_after_calibration(self):
@@ -225,11 +248,13 @@ class Bridge:
         return self.last_state
 
     def status(self):
-        return {"type": "status", "motor": self.motor_ready(), "pose": self.pose_ready()}
+        tag = self.tags.filter.status_id if self.tags is not None else -1
+        return {"type": "status", "motor": self.motor_ready(), "pose": self.pose_ready(), "tag": tag}
 
     def close(self):
         self.godot.close()
         self.swing_link.close()
+        self.tag_link.close()
 
 
 def main(argv=None):
@@ -239,6 +264,8 @@ def main(argv=None):
     use_motor = hardware and bc.MOTOR_ENABLED and not args.no_motor
     use_pose = hardware and bc.POSE_ENABLED and not args.no_pose
     use_mqtt = bc.MQTT_ENABLED and not args.no_mqtt
+    use_tags = hardware and bc.TAGS_ENABLED and not args.no_tags
+    use_view = (use_pose or use_tags) and bc.DISPLAY_ENABLED and not args.no_display
 
     try:                                  # first, so a second bridge stops before touching any hardware
         commands = UdpReceiver(bc.BRIDGE_HOST, bc.BRIDGE_PORT)
@@ -250,22 +277,47 @@ def main(argv=None):
     config.SHOW_CAMERA_PREVIEW = bc.POSE_PREVIEW
 
     bridge = None
-    motor = pose = None
+    motor = pose = tags = view = None
     if use_motor:
         from rhythm_motor import RhythmMotor
         motor = RhythmMotor(on_swing=lambda ev: bridge.on_swing(ev))
+    if use_tags:
+        from tags import TagScanner
+        # Shares PoseTracker's camera; with --no-pose nobody else has it open, so the scanner opens it.
+        tags = TagScanner(on_event=lambda tag_id, f: bridge.on_tag(tag_id, f), own_camera=not use_pose)
+    if use_view:
+        from camera_view import CameraView
+        view = CameraView(tags=tags)
+        if tags and tags.own_camera:
+            tags.frame_listener = view.on_frame
     if use_pose:
         from pose_tracker import PoseTracker
-        pose = PoseTracker()
-    bridge = Bridge(motor, pose, publish_score=mqtt.publish_score)   # before the threads start: on_swing can't miss it
+        readers = [r.on_frame for r in (tags, view) if r is not None]   # everyone sharing the webcam
+
+        def on_frame(t, frame):
+            for read in readers:
+                read(t, frame)
+
+        pose = PoseTracker(on_frame=on_frame if readers else None)
+        if view:
+            view.pose = pose
+    # Built before any thread starts, so on_swing / on_tag can't miss it.
+    bridge = Bridge(motor, pose, publish_score=mqtt.publish_score, tags=tags)
     if motor:
         motor.start()
         print("[motor] scanning -- then hold the paddle still, BLACK toward the screen, to calibrate")
+    if tags:
+        tags.start()
+        print(f"[tag] scanning tag16h5 IDs {sorted(bc.ALLOWED_TAG_IDS)} at {bc.TAG_RATE_HZ:g} Hz "
+              f"({'own camera' if tags.own_camera else 'pose camera frames'})")
     if pose:
         pose.start()
+    if view:
+        view.start()
+        print("[view] camera view window open (Esc / Q in it, or closing it, hides only the view)")
 
     print(f"[bridge] sending to Godot at {bc.GODOT_HOST}:{bc.GODOT_PORT}  "
-          f"(motor {'on' if motor else 'off'}, pose {'on' if pose else 'off'}, "
+          f"(motor {'on' if motor else 'off'}, pose {'on' if pose else 'off'}, tags {'on' if tags else 'off'}, "
           f"state {'%d Hz' % bc.STATE_RATE_HZ if hardware else 'off'}); "
           f"listening on {bc.BRIDGE_HOST}:{bc.BRIDGE_PORT}  Ctrl+C to quit")
     state_dt = 1.0 / bc.STATE_RATE_HZ
@@ -291,7 +343,9 @@ def main(argv=None):
                 data = bridge.godot.send(bridge.status())
                 if data is not None and bc.PRINT_SENDS:
                     print(f"[status] {data.decode('utf-8')}   motor: {motor.status if motor else 'off'} | "
-                          f"pose: {pose.status if pose else 'off'} | mqtt: {mqtt.status}")
+                          f"pose: {pose.status if pose else 'off'} | tags: {tags.status if tags else 'off'} | "
+                          f"view: {view.status if view else 'off'} | "
+                          f"mqtt: {mqtt.status}")
                 next_status += bc.STATUS_INTERVAL_S
                 if next_status < now:
                     next_status = now + bc.STATUS_INTERVAL_S
@@ -309,6 +363,10 @@ def main(argv=None):
         print("Shutting down...")
         if pose:
             pose.stop()
+        if tags:
+            tags.stop()
+        if view:
+            view.stop()
         if motor:
             motor.stop()
         bridge.close()

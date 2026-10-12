@@ -1,6 +1,10 @@
 extends Control
 const GREY := Color("C2C3C7")
 const YELLOW := Color("FFEC27")
+const MANUAL_OVERRIDE_MS := 3000
+var tag_buttons: Dictionary = {}
+var last_tag: int = -1
+var manual_until: int = 0
 
 func _ready() -> void:
 	$List.add_child(make_columns("", ["BPM", "TIME", "CUES", "BEST"]))
@@ -11,8 +15,13 @@ func _ready() -> void:
 		var chart: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 		var button: Button = make_row(chart)
 		button.pressed.connect(_on_song_chosen.bind(path))
+		if chart.has("tag_id"):
+			tag_buttons[int(chart["tag_id"])] = button
 		$List.add_child(button)
 	$List.get_child(1).grab_focus()
+	Bridge.tag_received.connect(_on_tag)
+	Bridge.swing_received.connect(_on_swing)
+	_on_tag(Bridge.current_tag)
 
 func _on_song_chosen(path: String) -> void:
 	GameState.chart_path = path
@@ -80,3 +89,26 @@ func best_text(chart: Dictionary) -> String:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().change_scene_to_file("res://scenes/Title.tscn")
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+		manual_until = Time.get_ticks_msec() + MANUAL_OVERRIDE_MS
+
+func _on_tag(id: int) -> void:
+	print("tag ", id, " | known tags: ", tag_buttons.keys())
+	if id < 0:
+		last_tag = -1
+		return
+	if id == last_tag:
+		return
+	last_tag = id
+	if Time.get_ticks_msec() < manual_until:
+		return
+	if tag_buttons.has(id):
+		tag_buttons[id].grab_focus()
+	
+
+func _on_swing(_age_s: float, _strength: float) -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is Button:
+		focused.pressed.emit()

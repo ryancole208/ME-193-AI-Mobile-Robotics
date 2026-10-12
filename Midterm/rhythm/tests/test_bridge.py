@@ -66,8 +66,8 @@ class FakePose:
         return FakeSnap(self.paddle_x)
 
 
-def make(motor=None, pose=None, published=None):
-    return Bridge(motor, pose, godot=FakeLink(), swing_link=FakeLink(),
+def make(motor=None, pose=None, published=None, tags=None):
+    return Bridge(motor, pose, godot=FakeLink(), swing_link=FakeLink(), tag_link=FakeLink(), tags=tags,
                   publish_score=None if published is None else published.append)
 
 
@@ -95,7 +95,7 @@ def test_x_maps_the_table_to_0_1_and_clamps():
 def test_disabled_hardware_sends_neutral_state_and_false_status():
     b = make()
     assert b.state(0.0) == {"type": "state", "x": 0.5, "roll": 0.0, "face": "black"}
-    assert b.status() == {"type": "status", "motor": False, "pose": False}
+    assert b.status() == {"type": "status", "motor": False, "pose": False, "tag": -1}
 
 
 def test_pose_x_is_held_while_the_wrist_is_lost():
@@ -246,3 +246,28 @@ def test_receiver_drains_every_waiting_packet_without_blocking():
     finally:
         tx.close()
         rx.close()
+
+
+# -- AprilTag events -------------------------------------------------------------
+
+def test_tag_events_are_sent_once_on_their_own_socket():
+    b = make()
+    b.on_tag(7)
+    b.on_tag(-1)
+    assert b.tag_link.msgs == [{"type": "tag", "id": 7}, {"type": "tag", "id": -1}]
+    assert b.godot.msgs == [] and b.swing_link.msgs == []
+
+
+def test_status_repeats_the_current_tag():
+    from tags import TagFilter
+
+    class FakeScanner:
+        filter = TagFilter(allowed=(7,), stable_frames=1, min_side_px=0, lost_s=1.0)
+
+    b = make(tags=FakeScanner())
+    assert b.status()["tag"] == -1                       # nothing seen yet
+    square = [(0, 0), (50, 0), (50, 50), (0, 50)]
+    FakeScanner.filter.update(0.0, [(7, square)])
+    assert b.status()["tag"] == 7
+    FakeScanner.filter.update(2.0, [])
+    assert b.status()["tag"] == -1                       # lost

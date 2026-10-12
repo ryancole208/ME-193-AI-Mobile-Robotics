@@ -15,6 +15,7 @@ func _ready() -> void:
 
 func update_text() -> void:
 	text = "%s\nAcc %.1f%%\nStreak %d" % [last_grade, accuracy(), streak]
+	Bridge.send({"type": "score", "streak": streak, "max_streak": best_streak})
 
 
 func _on_scheduler_judged(grade: String, _offset_ms: float) -> void:

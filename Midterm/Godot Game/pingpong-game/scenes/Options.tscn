@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bxawnaybcijgw"]
 
 [ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="1_j6yq7"]
-[ext_resource type="Script" uid="uid://chfdcu4wa5fjx" path="res://scenes/options.gd" id="1_nmn1p"]
+[ext_resource type="Script" uid="uid://chfdcu4wa5fjx" path="res://scripts/options.gd" id="1_nmn1p"]
 [ext_resource type="AudioStream" uid="uid://jewniv4w5p42" path="res://audio/sfx/cue.ogg" id="2_ckjey"]
 [ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="4_pxqj8"]
 

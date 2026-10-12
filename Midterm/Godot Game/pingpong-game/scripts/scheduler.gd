@@ -10,6 +10,7 @@ var flight: int = 0
 @export var opponent_hit_height: float = 24.0
 @export var arc_height: float = 16.0
 @export var bounce_at: float = 0.6
+@export var bounce_spot: float = 0.75
 @export var player_x_range: Vector2 = Vector2(96, 288)
 @export var opponent_x_range: Vector2 = Vector2(144, 240)
 @export var opponent: Node2D
@@ -29,6 +30,7 @@ var next_cue: int = 0
 
 func _ready() -> void:
 	build_hits()
+	Bridge.swing_received.connect(_on_bridge_swing)
 
 func _process(_delta: float) -> void:
 	var now: float = conductor.song_position
@@ -51,7 +53,11 @@ func _process(_delta: float) -> void:
 		t = 0.0
 	var from: Vector2 = spot_for(a)
 	var to: Vector2 = spot_for(b)
-	ball.position = from.lerp(to, t)
+	var bounce_pos: Vector2 = from.lerp(to, bounce_spot)
+	if t < bounce_at:
+		ball.position = from.lerp(bounce_pos, t / bounce_at)
+	else:
+		ball.position = bounce_pos.lerp(to, (t - bounce_at) / (1.0 - bounce_at))
 	var height: float
 	var h_from: float = opponent_hit_height if a["by"] == "opponent" else player_hit_height
 	var h_to: float = opponent_hit_height if b["by"] == "opponent" else player_hit_height
@@ -119,7 +125,13 @@ func spot_for(hit: Dictionary) -> Vector2:
 
 
 func _on_paddle_swung() -> void:
-	var now: float = conductor.song_position - GameState.input_offset_ms / 1000.0
+	judge_swing(0.0)
+
+func _on_bridge_swing(age_s: float, _strength: float) -> void:
+	judge_swing(age_s)
+
+func judge_swing(age_s: float) -> void:
+	var now: float = conductor.song_position - age_s - GameState.input_offset_ms / 1000.0
 	var best: int = -1
 	var best_offset: float = INF
 	for i in range(maxi(flight - 2, 0), mini(flight + 3, hits.size())):
@@ -141,6 +153,7 @@ func _on_paddle_swung() -> void:
 	hits[best]["hit_time"] = now
 	judged.emit(grade, ms)
 	if grade != "Miss":
+		Bridge.send({"type": "haptic"})
 		var wait: float = hits[best]["time"] - now \
 			- conductor.output_latency - sfx_lead_ms / 1000.0
 		play_player_hit(wait)

@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://ba3xbjjxkxpa6"]
 
-[ext_resource type="Script" uid="uid://c8te05nteextb" path="res://scenes/calibration.gd" id="1_e5k65"]
+[ext_resource type="Script" uid="uid://c8te05nteextb" path="res://scripts/calibration.gd" id="1_e5k65"]
 [ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="1_qsgpr"]
 [ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scripts/conductor.gd" id="2_e5k65"]
 [ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="4_xks2i"]
 [ext_resource type="Script" uid="uid://r1wl6jbqkeqr" path="res://scripts/countdown.gd" id="5_bwad5"]
 [ext_resource type="AudioStream" uid="uid://dgwsuegu44o1w" path="res://audio/sfx/Click.ogg" id="6_6ivco"]
+[ext_resource type="Script" uid="uid://bf48fv74ek2rf" path="res://scripts/timeline.gd" id="7_bwad5"]
 
 [node name="Calibration" type="Control" unique_id=557311953 node_paths=PackedStringArray("conductor")]
 layout_mode = 3
@@ -44,7 +45,7 @@ offset_bottom = 8.0
 grow_horizontal = 2
 theme_override_fonts/font = ExtResource("4_xks2i")
 theme_override_font_sizes/font_size = 16
-text = "Tap Space on Every Beat"
+text = "Swing or Tap Space on Every Beat"
 
 [node name="Countdown" type="Label" parent="." unique_id=1811794724 node_paths=PackedStringArray("conductor")]
 layout_mode = 1
@@ -63,3 +64,27 @@ conductor = NodePath("../Conductor")
 [node name="Click" type="AudioStreamPlayer" parent="Countdown" unique_id=574016628]
 stream = ExtResource("6_6ivco")
 bus = &"SFX"
+
+[node name="Timeline" type="Control" parent="." unique_id=1405376168]
+anchors_preset = 0
+offset_left = 92.0
+offset_top = 160.0
+offset_right = 292.0
+offset_bottom = 176.0
+script = ExtResource("7_bwad5")
+
+[node name="Early" type="Label" parent="Timeline" unique_id=1112778983]
+layout_mode = 0
+offset_top = 12.0
+offset_right = 40.0
+offset_bottom = 20.0
+text = "Early"
+
+[node name="Late" type="Label" parent="Timeline" unique_id=15576751]
+layout_mode = 0
+offset_left = 196.0
+offset_top = 12.0
+offset_right = 236.0
+offset_bottom = 20.0
+text = "Late
+"

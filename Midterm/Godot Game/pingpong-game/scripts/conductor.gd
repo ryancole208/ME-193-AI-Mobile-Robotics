@@ -102,3 +102,4 @@ func start_count_in() -> void:
 	last_beat = first_click - 1
 	count_in_start_usec = Time.get_ticks_usec()
 	counting_in = true
+	Bridge.send({"type": "zero"})

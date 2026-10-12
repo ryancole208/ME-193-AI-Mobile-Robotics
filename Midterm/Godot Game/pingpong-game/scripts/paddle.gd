@@ -7,6 +7,12 @@ signal swung
 @export var black_texture: Texture2D
 var yellow_facing: bool = true
 @export var max_roll_degrees: float = 45.0
+@export var invert_x: bool = false
+@export var roll_sign: float = 1.0
+
+
+func _ready() -> void:
+	Bridge.state_received.connect(_on_bridge_state)
 
 func _process(delta: float) -> void:
 	var direction: float = Input.get_axis("move_left", "move_right")
@@ -26,3 +32,10 @@ func set_yellow_facing(value: bool) -> void:
 
 func set_roll(degrees: float) -> void:
 	rotation_degrees = clampf(degrees, -max_roll_degrees, max_roll_degrees)
+
+func _on_bridge_state(x: float, roll: float, face: String) -> void:
+	if invert_x:
+		x = 1.0 - x
+	position.x = lerpf(min_x, max_x, x)
+	set_roll(roll * roll_sign)
+	set_yellow_facing(face == "black")

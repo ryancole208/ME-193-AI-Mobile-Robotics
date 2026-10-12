@@ -63,6 +63,7 @@ func make_columns(left_text: String, cols: Array) -> HBoxContainer:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(left)
+
 	for text in cols:
 		var col: Label = make_label(text)
 		col.custom_minimum_size.x = COL_WIDTH
@@ -73,3 +74,9 @@ func make_columns(left_text: String, cols: Array) -> HBoxContainer:
 func best_text(chart: Dictionary) -> String:
 	var hs: float = GameState.high_score(chart["title"])
 	return "--" if hs < 0.0 else "%d%%" % roundi(hs)
+	
+	
+	
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_tree().change_scene_to_file("res://scenes/Title.tscn")

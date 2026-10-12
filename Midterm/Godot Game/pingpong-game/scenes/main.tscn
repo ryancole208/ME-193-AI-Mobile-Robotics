@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dckb8ind4xdkd"]
 
 [ext_resource type="PackedScene" uid="uid://dyor0ru7gxxml" path="res://scenes/player_paddle.tscn" id="1_0wfyh"]
+[ext_resource type="Script" uid="uid://bmaoa8t5xkmbu" path="res://scenes/main.gd" id="1_gqmmt"]
 [ext_resource type="PackedScene" uid="uid://dtshvxvphkcft" path="res://scenes/stage.tscn" id="1_jyhfs"]
 [ext_resource type="Script" uid="uid://2qpft2x2ncxb" path="res://scripts/warning.gd" id="3_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cmclhwimh4eyw" path="res://scenes/opponent_paddle.tscn" id="3_jyhfs"]
@@ -21,6 +22,7 @@
 [ext_resource type="AudioStream" uid="uid://dgwsuegu44o1w" path="res://audio/sfx/Click.ogg" id="19_yc10j"]
 
 [node name="Main" type="Node2D" unique_id=1249638101]
+script = ExtResource("1_gqmmt")
 
 [node name="Stage" parent="." unique_id=811980437 instance=ExtResource("1_jyhfs")]
 
@@ -51,6 +53,7 @@ position = Vector2(192, 200)
 stream = ExtResource("5_o6xl0")
 volume_db = -8.0
 autoplay = true
+bus = &"Music"
 script = ExtResource("6_tefeu")
 chart_path = "res://charts/Theme_for_Harold_var_3.chart.json"
 
@@ -89,17 +92,21 @@ script = ExtResource("11_a8y0u")
 
 [node name="HitOpponent" type="AudioStreamPlayer" parent="sfx" unique_id=1484458753]
 stream = ExtResource("11_trceg")
+bus = &"SFX"
 
 [node name="HitPlayer" type="AudioStreamPlayer" parent="sfx" unique_id=1811499144]
 stream = ExtResource("12_a8y0u")
 volume_db = 2.0
+bus = &"SFX"
 
 [node name="Miss" type="AudioStreamPlayer" parent="sfx" unique_id=923862402]
 stream = ExtResource("13_jkv2x")
 volume_db = 2.0
+bus = &"SFX"
 
 [node name="Cue" type="AudioStreamPlayer" parent="sfx" unique_id=583518601]
 stream = ExtResource("15_jkv2x")
+bus = &"SFX"
 
 [node name="Countdown" type="Label" parent="." unique_id=398637307 node_paths=PackedStringArray("conductor")]
 anchors_preset = 8

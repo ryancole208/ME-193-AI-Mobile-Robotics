@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://ba3xbjjxkxpa6"]
+
+[ext_resource type="Script" uid="uid://c8te05nteextb" path="res://scenes/calibration.gd" id="1_e5k65"]
+[ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="1_qsgpr"]
+[ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scripts/conductor.gd" id="2_e5k65"]
+[ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="4_xks2i"]
+[ext_resource type="Script" uid="uid://r1wl6jbqkeqr" path="res://scripts/countdown.gd" id="5_bwad5"]
+[ext_resource type="AudioStream" uid="uid://dgwsuegu44o1w" path="res://audio/sfx/Click.ogg" id="6_6ivco"]
+
+[node name="Calibration" type="Control" unique_id=557311953 node_paths=PackedStringArray("conductor")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_e5k65")
+conductor = NodePath("Conductor")
+
+[node name="Background" type="ColorRect" parent="." unique_id=2119525657]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Conductor" type="AudioStreamPlayer" parent="." unique_id=2026518706]
+stream = ExtResource("1_qsgpr")
+volume_db = -8.0
+autoplay = true
+bus = &"Music"
+script = ExtResource("2_e5k65")
+chart_path = "res://charts/Theme_for_Harold_var_3.chart.json"
+
+[node name="Info" type="Label" parent="." unique_id=2005547053]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 8.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("4_xks2i")
+theme_override_font_sizes/font_size = 16
+text = "Tap Space on Every Beat"
+
+[node name="Countdown" type="Label" parent="." unique_id=1811794724 node_paths=PackedStringArray("conductor")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_xks2i")
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("5_bwad5")
+conductor = NodePath("../Conductor")
+
+[node name="Click" type="AudioStreamPlayer" parent="Countdown" unique_id=574016628]
+stream = ExtResource("6_6ivco")
+bus = &"SFX"

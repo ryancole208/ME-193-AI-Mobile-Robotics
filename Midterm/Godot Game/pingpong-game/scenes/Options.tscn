@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://bxawnaybcijgw"]
+
+[ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="1_j6yq7"]
+[ext_resource type="Script" uid="uid://chfdcu4wa5fjx" path="res://scenes/options.gd" id="1_nmn1p"]
+[ext_resource type="AudioStream" uid="uid://jewniv4w5p42" path="res://audio/sfx/cue.ogg" id="2_ckjey"]
+[ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="4_pxqj8"]
+
+[node name="Options" type="Control" unique_id=1361982201]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nmn1p")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1475215375]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Center" type="VBoxContainer" parent="." unique_id=1872605117]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="Center" unique_id=194961251]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_j6yq7")
+theme_override_font_sizes/font_size = 16
+text = "OPTIONS"
+horizontal_alignment = 1
+
+[node name="MusicRow" type="HBoxContainer" parent="Center" unique_id=539676426]
+layout_mode = 2
+
+[node name="Music" type="Label" parent="Center/MusicRow" unique_id=1744764215]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "MUSIC"
+
+[node name="MusicSlider" type="HSlider" parent="Center/MusicRow" unique_id=1414007154]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+max_value = 1.0
+step = 0.1
+
+[node name="SfxRow" type="HBoxContainer" parent="Center" unique_id=1201215103]
+layout_mode = 2
+
+[node name="SFX" type="Label" parent="Center/SfxRow" unique_id=1856761306]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "SFX"
+
+[node name="SfxSlider" type="HSlider" parent="Center/SfxRow" unique_id=194271448]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+max_value = 1.0
+step = 0.1
+
+[node name="Prompt" type="Label" parent="Center" unique_id=648162942]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "ESC: SAVE AND BACK"
+
+[node name="TestSound" type="AudioStreamPlayer" parent="." unique_id=1846970673]
+stream = ExtResource("2_ckjey")
+bus = &"SFX"
+
+[node name="MusicPreview" type="AudioStreamPlayer" parent="." unique_id=2113232018]
+stream = ExtResource("4_pxqj8")
+autoplay = true
+bus = &"Music"

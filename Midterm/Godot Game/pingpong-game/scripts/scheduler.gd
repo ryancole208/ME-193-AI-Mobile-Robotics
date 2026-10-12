@@ -33,9 +33,10 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var now: float = conductor.song_position
 	var late_limit: float = (good_window_ms + miss_grace_ms) / 1000.0
+	var judge_now: float = now - GameState.input_offset_ms / 1000.0
 	for i in range(maxi(flight - 2, 0), mini(flight + 2, hits.size())):
 		var h: Dictionary = hits[i]
-		if h["by"] == "player" and not h["judged"] and now > h["time"] + late_limit:
+		if h["by"] == "player" and not h["judged"] and judge_now > h["time"] + late_limit:
 			h["judged"] = true
 			h["grade"] = "Miss"
 			judged.emit("Miss", 0.0)
@@ -118,7 +119,7 @@ func spot_for(hit: Dictionary) -> Vector2:
 
 
 func _on_paddle_swung() -> void:
-	var now: float = conductor.song_position
+	var now: float = conductor.song_position - GameState.input_offset_ms / 1000.0
 	var best: int = -1
 	var best_offset: float = INF
 	for i in range(maxi(flight - 2, 0), mini(flight + 3, hits.size())):

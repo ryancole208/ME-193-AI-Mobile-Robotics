@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://dtshvxvphkcft" path="res://scenes/stage.tscn" id="1_jyhfs"]
 [ext_resource type="Script" uid="uid://2qpft2x2ncxb" path="res://scripts/warning.gd" id="3_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cmclhwimh4eyw" path="res://scenes/opponent_paddle.tscn" id="3_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://cypnli0omphsd" path="res://art/flag.png" id="3_vxglm"]
+[ext_resource type="Script" uid="uid://b7jb33pl17k2p" path="res://scripts/flag.gd" id="4_2f3dj"]
 [ext_resource type="PackedScene" uid="uid://bmooh24vgttdp" path="res://scenes/ball.tscn" id="4_jyhfs"]
 [ext_resource type="Script" uid="uid://f7wt67oiulmi" path="res://scripts/knight.gd" id="4_yc10j"]
 [ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="5_o6xl0"]
@@ -30,6 +32,24 @@
 script = ExtResource("1_gqmmt")
 
 [node name="Stage" parent="." unique_id=811980437 instance=ExtResource("1_jyhfs")]
+
+[node name="FlagLight" type="Sprite2D" parent="." unique_id=903563644 node_paths=PackedStringArray("conductor")]
+modulate = Color(1, 0, 0.3019608, 1)
+position = Vector2(90, 80)
+texture = ExtResource("3_vxglm")
+centered = false
+hframes = 2
+script = ExtResource("4_2f3dj")
+conductor = NodePath("../Conductor")
+
+[node name="FlagDark" type="Sprite2D" parent="." unique_id=2058803166 node_paths=PackedStringArray("conductor")]
+modulate = Color(0.49411765, 0.14509805, 0.3254902, 1)
+position = Vector2(346, 48)
+texture = ExtResource("3_vxglm")
+centered = false
+hframes = 2
+script = ExtResource("4_2f3dj")
+conductor = NodePath("../Conductor")
 
 [node name="OpponentPaddle" parent="." unique_id=2079362082 instance=ExtResource("3_jyhfs")]
 position = Vector2(192, 98)
@@ -111,6 +131,7 @@ autoplay = true
 bus = &"Music"
 script = ExtResource("6_tefeu")
 chart_path = "res://charts/Theme_for_Harold_var_3.chart.json"
+debug_start_bar = 85
 
 [node name="BeatLight" type="ColorRect" parent="." unique_id=292588354]
 offset_left = 4.0

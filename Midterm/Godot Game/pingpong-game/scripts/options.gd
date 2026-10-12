@@ -23,4 +23,4 @@ func _on_sfx_changed(value: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		GameState.save_volumes()
-		get_tree().change_scene_to_file("res://scenes/Title.tscn")
+		Fader.go("res://scenes/Title.tscn")

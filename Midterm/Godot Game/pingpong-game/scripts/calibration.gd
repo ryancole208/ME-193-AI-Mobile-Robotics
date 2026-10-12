@@ -13,12 +13,12 @@ func _on_bridge_swing(age_s: float, _strength: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		get_tree().change_scene_to_file("res://scenes/Title.tscn")
+		Fader.go("res://scenes/Title.tscn")
 	elif event.is_action_pressed("swing"):
 		record_tap(0.0)
 	elif event.is_action_pressed("ui_accept") and offsets.size() >= taps_needed:
 		GameState.save_input_offset(result_ms)
-		get_tree().change_scene_to_file("res://scenes/Title.tscn")
+		Fader.go("res://scenes/Title.tscn")
 
 func record_tap(age_s: float) -> void:
 	if conductor.counting_in or offsets.size() >= taps_needed:

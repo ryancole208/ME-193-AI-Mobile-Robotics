@@ -23,6 +23,7 @@ buses/default_bus_layout="uid://bb2i551jqmba0"
 
 GameState="*uid://dw78ucr88qcrf"
 Bridge="*uid://cf7oq7saat2uw"
+Fader="*uid://dw45my4gnee8p"
 
 [display]
 

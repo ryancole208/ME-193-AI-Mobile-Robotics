@@ -15,9 +15,9 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept"):
-		get_tree().change_scene_to_file("res://scenes/SongSelect.tscn")
+		Fader.go("res://scenes/SongSelect.tscn")
 
 func _on_swing(_age_s: float, _strength: float) -> void:
 	if Time.get_ticks_msec() - opened_msec < SWING_DELAY_MS:
 		return
-	get_tree().change_scene_to_file("PASTE song_select PATH")
+	Fader.go("PASTE song_select PATH")

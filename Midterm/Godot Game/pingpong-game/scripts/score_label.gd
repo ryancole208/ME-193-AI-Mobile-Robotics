@@ -38,4 +38,4 @@ func _on_song_finished() -> void:
 		"best_streak": best_streak,
 		"full_run": conductor.debug_start_bar == 0,
 	}
-	get_tree().change_scene_to_file("res://scenes/Results.tscn")
+	Fader.go("res://scenes/Results.tscn")

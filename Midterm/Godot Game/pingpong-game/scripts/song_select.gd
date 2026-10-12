@@ -25,7 +25,7 @@ func _ready() -> void:
 
 func _on_song_chosen(path: String) -> void:
 	GameState.chart_path = path
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	Fader.go("res://scenes/main.tscn")
 func make_row(chart: Dictionary) -> Button:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(372, 14)
@@ -88,7 +88,7 @@ func best_text(chart: Dictionary) -> String:
 	
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		get_tree().change_scene_to_file("res://scenes/Title.tscn")
+		Fader.go("res://scenes/Title.tscn")
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):

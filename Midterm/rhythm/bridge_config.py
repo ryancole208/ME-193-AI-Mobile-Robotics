@@ -56,7 +56,7 @@ HAPTIC_PULSE_MS = 80                   # fixed pulse length for every {"type":"h
 # AprilTag song selection (tag16h5, read from the webcam frames PoseTracker already grabs;
 # with --no-pose the tag scanner opens the webcam itself)
 # =============================================================================
-ALLOWED_TAG_IDS = (0, 6, 7, 8, 9, 10, 11)   # add your eighth ID here; any other ID is ignored
+ALLOWED_TAG_IDS = (0, 4, 6, 7, 8, 9, 10, 11)   # the printed song tags; any other ID is ignored
 TAG_RATE_HZ = 10                       # detection passes per second (at most)
 TAG_STABLE_FRAMES = 3                  # the same ID in this many passes in a row -> {"type":"tag","id":N}
 TAG_MIN_SIDE_PX = 30                   # ignore tags whose shortest side is smaller (far / false positives)

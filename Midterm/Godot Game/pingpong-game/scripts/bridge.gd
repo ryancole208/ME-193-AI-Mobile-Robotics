@@ -53,7 +53,7 @@ func handle(msg: Dictionary) -> void:
 		"status":
 			status_received.emit(bool(msg["motor"]), bool(msg["pose"]))
 		"tag":
-			tag_received.emit(int(msg.get("id", -1)))
+			current_tag = int(msg.get("id", -1))
 			tag_received.emit(current_tag)
 
 func send(msg: Dictionary) -> void:

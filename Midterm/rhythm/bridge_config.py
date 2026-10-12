@@ -9,7 +9,7 @@ webcam pose and sends them over UDP on localhost (one JSON object per packet, UT
     Godot -> Python  (BRIDGE_PORT): haptic, zero, score
 
 This file imports nothing, so `bridge.py --no-hardware` starts instantly. The motor, IMU,
-webcam, pose and MQTT topic settings are NOT duplicated here -- they stay in ../config.py
+webcam and pose settings are NOT duplicated here -- they stay in ../config.py
 (read through rhythm/config.py) and are only loaded when the bridge needs them.
 """
 
@@ -36,6 +36,7 @@ POSE_ENABLED = True                    # False = never open the webcam (same as 
 POSE_PREVIEW = False                   # True = the pose thread also builds its preview image (unused by the bridge)
 HAPTIC_ENABLED = True                  # False = ignore {"type":"haptic"} from Godot
 MQTT_ENABLED = True                    # False = never touch the network (same as --no-mqtt)
+MQTT_TOPIC = "ME193/Rogers/Ryan"       # the bridge's score topic (consecutive-hit record); broker is in ../../mqttlib.py
 PRINT_SENDS = True                     # print every status and swing packet (state: see PRINT_STATE_INTERVAL_S)
 
 # =============================================================================

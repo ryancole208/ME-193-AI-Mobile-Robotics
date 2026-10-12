@@ -6,11 +6,14 @@
 [ext_resource type="Script" uid="uid://2qpft2x2ncxb" path="res://scripts/warning.gd" id="3_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cmclhwimh4eyw" path="res://scenes/opponent_paddle.tscn" id="3_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://bmooh24vgttdp" path="res://scenes/ball.tscn" id="4_jyhfs"]
+[ext_resource type="Script" uid="uid://f7wt67oiulmi" path="res://scripts/knight.gd" id="4_yc10j"]
 [ext_resource type="AudioStream" uid="uid://cml4t6cgbf6eq" path="res://audio/music/Theme for Harold var 3.mp3" id="5_o6xl0"]
 [ext_resource type="Script" uid="uid://c3h3lwwcy1sec" path="res://scripts/conductor.gd" id="6_tefeu"]
 [ext_resource type="Script" uid="uid://dvr3m2jw42q64" path="res://scripts/beat_light.gd" id="7_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://ckartq1xwyaay" path="res://art/paddlesword.png" id="8_pm3ni"]
 [ext_resource type="Script" uid="uid://b7rrhyoqsae1y" path="res://scripts/scheduler.gd" id="8_tipki"]
 [ext_resource type="Script" uid="uid://dwpkue2lburn2" path="res://scripts/score_label.gd" id="9_85g3d"]
+[ext_resource type="Texture2D" uid="uid://bfj2mmgf108vb" path="res://art/paddlesword_dark.png" id="9_y6deb"]
 [ext_resource type="Script" uid="uid://dugxmnlx1c2ka" path="res://scripts/grade_popup.gd" id="10_choun"]
 [ext_resource type="Script" uid="uid://4xfc5kbnv48d" path="res://scripts/sfx.gd" id="11_a8y0u"]
 [ext_resource type="AudioStream" uid="uid://brycsiun3rc3w" path="res://audio/sfx/hit_opponent.ogg" id="11_trceg"]
@@ -25,6 +28,21 @@
 script = ExtResource("1_gqmmt")
 
 [node name="Stage" parent="." unique_id=811980437 instance=ExtResource("1_jyhfs")]
+
+[node name="OpponentPaddle" parent="." unique_id=2079362082 instance=ExtResource("3_jyhfs")]
+position = Vector2(192, 98)
+script = ExtResource("4_yc10j")
+step_px = 3.0
+
+[node name="Warning" type="Label" parent="OpponentPaddle" unique_id=59055018]
+modulate = Color(1, 0.9254902, 0.15294118, 1)
+offset_left = -2.0
+offset_top = -22.0
+offset_right = 38.0
+offset_bottom = 1.0
+theme_override_font_sizes/font_size = 8
+text = "!"
+script = ExtResource("3_jbj1t")
 
 [node name="Table" type="Polygon2D" parent="." unique_id=1851300353]
 color = Color(0.67058825, 0.32156864, 0.21176471, 1)
@@ -48,24 +66,14 @@ color = Color(0.37254903, 0.34117648, 0.30980393, 1)
 color = Color(0.7607843, 0.7647059, 0.78039217, 1)
 polygon = PackedVector2Array(107, 141, 277, 141, 277, 148, 107, 148)
 
-[node name="OpponentPaddle" parent="." unique_id=2079362082 instance=ExtResource("3_jyhfs")]
-position = Vector2(192, 108)
-
-[node name="Warning" type="Label" parent="OpponentPaddle" unique_id=59055018]
-modulate = Color(1, 0.9254902, 0.15294118, 1)
-offset_left = -2.0
-offset_top = -22.0
-offset_right = 38.0
-offset_bottom = 1.0
-theme_override_font_sizes/font_size = 8
-text = "!"
-script = ExtResource("3_jbj1t")
-
 [node name="Ball" parent="." unique_id=1988265923 instance=ExtResource("4_jyhfs")]
 position = Vector2(192, 150)
 
 [node name="paddle" parent="." unique_id=1153872660 instance=ExtResource("1_0wfyh")]
 position = Vector2(192, 200)
+texture = ExtResource("8_pm3ni")
+yellow_texture = ExtResource("8_pm3ni")
+black_texture = ExtResource("9_y6deb")
 
 [node name="Conductor" type="AudioStreamPlayer" parent="." unique_id=519899952]
 stream = ExtResource("5_o6xl0")
@@ -157,4 +165,5 @@ stream = ExtResource("19_yc10j")
 [connection signal="judged" from="Scheduler" to="GradePopup" method="_on_scheduler_judged"]
 [connection signal="judged" from="Scheduler" to="sfx" method="_on_scheduler_judged"]
 [connection signal="opponent_hit" from="Scheduler" to="sfx" method="_on_scheduler_opponent_hit"]
+[connection signal="player_hit" from="Scheduler" to="paddle" method="flash"]
 [connection signal="player_hit" from="Scheduler" to="sfx" method="_on_scheduler_player_hit"]

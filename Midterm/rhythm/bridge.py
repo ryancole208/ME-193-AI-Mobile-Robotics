@@ -66,9 +66,9 @@ def parse_args(argv=None):
 
 
 def start_mqtt():
-    import config  # noqa: F401  rhythm/config.py: MQTT topic settings from ../config.py, puts ../ on sys.path
+    import config  # noqa: F401  rhythm/config.py: puts ../ on sys.path for mqtt_client
     from mqtt_client import ScorePublisher       # ../mqtt_client.py (uses ../../mqttlib.py)
-    mqtt = ScorePublisher()
+    mqtt = ScorePublisher(topic=bc.MQTT_TOPIC)   # not ../config.py's topic: that one is shared by the other games
     mqtt.start()
     mqtt.publish_score(0.0)                      # sent as soon as the broker connection is up
     print(f"[mqtt] publishing the hit-streak record to {mqtt.topic}")

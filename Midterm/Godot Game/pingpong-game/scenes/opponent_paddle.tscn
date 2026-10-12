@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://cmclhwimh4eyw"]
 
-[ext_resource type="Texture2D" uid="uid://cwlpd034xf1jo" path="res://art/opponent_paddle.png" id="1_o0eii"]
+[ext_resource type="Texture2D" uid="uid://launiglwhqq0" path="res://art/knight.png" id="1_o0eii"]
 
 [node name="OpponentPaddle" type="Sprite2D" unique_id=2079362082]
 texture = ExtResource("1_o0eii")
+offset = Vector2(-4, 5)
+hframes = 2

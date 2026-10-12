@@ -9,10 +9,14 @@ var yellow_facing: bool = true
 @export var max_roll_degrees: float = 45.0
 @export var invert_x: bool = false
 @export var roll_sign: float = 1.0
+var bridge_pose: bool = false
+var bridge_motor: bool = false
+var flash_tween: Tween
 
 
 func _ready() -> void:
 	Bridge.state_received.connect(_on_bridge_state)
+	Bridge.status_received.connect(_on_bridge_status)
 
 func _process(delta: float) -> void:
 	var direction: float = Input.get_axis("move_left", "move_right")
@@ -33,9 +37,24 @@ func set_yellow_facing(value: bool) -> void:
 func set_roll(degrees: float) -> void:
 	rotation_degrees = clampf(degrees, -max_roll_degrees, max_roll_degrees)
 
+func _on_bridge_status(motor: bool, pose: bool) -> void:
+	bridge_motor = motor
+	bridge_pose = pose
+
 func _on_bridge_state(x: float, roll: float, face: String) -> void:
-	if invert_x:
-		x = 1.0 - x
-	position.x = lerpf(min_x, max_x, x)
-	set_roll(roll * roll_sign)
-	set_yellow_facing(face == "black")
+	if bridge_pose:
+		if invert_x:
+			x = 1.0 - x
+		position.x = lerpf(min_x, max_x, x)
+	if bridge_motor:
+		set_roll(roll * roll_sign)
+		set_yellow_facing(face == "black")
+
+func flash() -> void:
+	if flash_tween:
+		flash_tween.kill()
+	flash_tween = create_tween()
+	flash_tween.tween_method(_set_flash, 1.0, 0.0, 0.2)
+
+func _set_flash(amount: float) -> void:
+	(material as ShaderMaterial).set_shader_parameter("flash", amount)

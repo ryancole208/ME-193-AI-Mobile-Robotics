@@ -95,7 +95,6 @@ func _input(event: InputEvent) -> void:
 		manual_until = Time.get_ticks_msec() + MANUAL_OVERRIDE_MS
 
 func _on_tag(id: int) -> void:
-	print("tag ", id, " | known tags: ", tag_buttons.keys())
 	if id < 0:
 		last_tag = -1
 		return

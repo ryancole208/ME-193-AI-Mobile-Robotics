@@ -1,0 +1,26 @@
+{
+  "song": "Celtic Impulse.mp3",
+"tag_id": 0,
+  "title": "Celtic Impulse",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+	"title": "Celtic Impulse",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Celtic Impulse\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 30,
+  "tempo": [
+	{"beat": 0, "bpm": 144}
+  ],
+  "downbeat": 2,
+  "start_bar": 2,
+  "end_bar": 89,
+  "pattern": [4],
+  "sections": [
+	{"bars": [50, 65], "pattern": [2, 4]},
+	{"bars": [74, 89], "pattern": [2, 4]}
+  ]
+}

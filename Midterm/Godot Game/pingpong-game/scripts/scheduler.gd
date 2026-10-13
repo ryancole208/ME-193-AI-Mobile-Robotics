@@ -1,0 +1,164 @@
+extends Node
+
+@export var conductor: Conductor
+var hits: Array[Dictionary] = []
+@export var ball: Node2D
+@export var opponent_spot: Vector2 = Vector2(192, 100)
+@export var player_spot: Vector2 = Vector2(192, 195)
+var flight: int = 0
+@export var player_hit_height: float = 12.0
+@export var opponent_hit_height: float = 24.0
+@export var arc_height: float = 16.0
+@export var bounce_at: float = 0.6
+@export var bounce_spot: float = 0.75
+@export var player_x_range: Vector2 = Vector2(96, 288)
+@export var opponent_x_range: Vector2 = Vector2(144, 240)
+@export var opponent: Node2D
+signal judged(grade: String, offset_ms: float)
+@export var perfect_window_ms: float = 50.0
+@export var good_window_ms: float = 120.0
+@export var miss_grace_ms: float = 120.0
+@export var paddle: Node2D
+@export var aim_tolerance_px: float = 15.0
+signal opponent_hit
+var next_sfx: int = 0
+@export var sfx_lead_ms: float = 50.0
+signal player_hit
+signal cue
+var cues: Array[float] = []
+var next_cue: int = 0
+
+func _ready() -> void:
+	build_hits()
+	Bridge.swing_received.connect(_on_bridge_swing)
+
+func _process(_delta: float) -> void:
+	var now: float = conductor.song_position
+	var late_limit: float = (good_window_ms + miss_grace_ms) / 1000.0
+	var judge_now: float = now - GameState.input_offset_ms / 1000.0
+	for i in range(maxi(flight - 2, 0), mini(flight + 2, hits.size())):
+		var h: Dictionary = hits[i]
+		if h["by"] == "player" and not h["judged"] and judge_now > h["time"] + late_limit:
+			h["judged"] = true
+			h["grade"] = "Miss"
+			judged.emit("Miss", 0.0)
+			
+	while flight < hits.size() - 2 and now >= hits[flight + 1]["time"]:
+		flight += 1
+	var a: Dictionary = hits[flight]
+	var b: Dictionary = hits[flight + 1]
+	var start_time: float = a.get("hit_time", a["time"])
+	var t: float = clampf(inverse_lerp(start_time, b["time"], now), 0.0, 1.0)
+	if a["by"] == "player" and not a["judged"]:
+		t = 0.0
+	var from: Vector2 = spot_for(a)
+	var to: Vector2 = spot_for(b)
+	var bounce_pos: Vector2 = from.lerp(to, bounce_spot)
+	if t < bounce_at:
+		ball.position = from.lerp(bounce_pos, t / bounce_at)
+	else:
+		ball.position = bounce_pos.lerp(to, (t - bounce_at) / (1.0 - bounce_at))
+	var height: float
+	var h_from: float = opponent_hit_height if a["by"] == "opponent" else player_hit_height
+	var h_to: float = opponent_hit_height if b["by"] == "opponent" else player_hit_height
+	if t < bounce_at:
+		var u: float = t / bounce_at
+		height = lerpf(h_from, 0.0, u) + 4.0 * arc_height * u * (1.0 - u)
+	else:
+		var u: float = (t - bounce_at) / (1.0 - bounce_at)
+		height = lerpf(0.0, h_to, u) + 2.0 * arc_height * u * (1.0 - u)
+	var sprite: Sprite2D = ball.get_node("Sprite")
+	var depth: float = inverse_lerp(opponent_spot.y, player_spot.y, ball.position.y)
+	height *= lerpf(0.5, 1.0, depth)
+	sprite.position.y = -height
+	sprite.frame = clampi(roundi(depth * 4.0), 0, 4)
+	if a["by"] == "opponent":
+		opponent.position.x = a["x"]
+	else:
+		var prev_x: float = hits[flight - 1]["x"] if flight > 0 else b["x"]
+		opponent.position.x = lerpf(prev_x, b["x"], t)
+	var missed: bool = a.get("grade", "") == "Miss" \
+		or (not a["judged"] and now > a["time"] + good_window_ms / 1000.0)
+	ball.visible = a["by"] == "opponent" or not missed
+	#Sound Effects
+	var sound_time: float = now + conductor.output_latency + sfx_lead_ms / 1000.0
+	while next_sfx < hits.size() and sound_time >= hits[next_sfx]["time"]:
+		var h: Dictionary = hits[next_sfx]
+		if h["by"] == "opponent" and sound_time - h["time"] < 0.1:
+			opponent_hit.emit()
+		next_sfx += 1
+	while next_cue < cues.size() and sound_time >= cues[next_cue]:
+		if sound_time - cues[next_cue] < 0.1:
+			cue.emit()
+		next_cue += 1
+
+
+
+func build_hits() -> void:
+	hits.clear()
+	var first_bar: int = int(conductor.chart["start_bar"])
+	var last_bar: int = int(conductor.chart["end_bar"])
+	for bar in range(first_bar, last_bar + 1):
+		var start: float = conductor.bar_to_beat(bar)
+		if ChartTools.pattern_for_bar(conductor.chart, bar).size() == 1:
+			hits.append({"beat": start + 1.0, "by": "opponent"})
+			hits.append({"beat": start + 3.0, "by": "player"})
+		else:
+			for i in range(4):
+				hits.append({"beat": start + i, "by": "opponent" if i % 2 == 0 else "player"})
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(conductor.chart["title"])
+	for h in hits:
+		h["time"] = conductor.beat_to_seconds(h["beat"])
+		var r: Vector2 = player_x_range if h["by"] == "player" else opponent_x_range
+		h["x"] = rng.randf_range(r.x, r.y)
+		h["judged"] = false
+	cues.clear()
+	for bar in range(first_bar, last_bar):
+		if ChartTools.pattern_for_bar(conductor.chart, bar).size() == 1 \
+				and ChartTools.pattern_for_bar(conductor.chart, bar + 1).size() == 2:
+			cues.append(conductor.beat_to_seconds(conductor.bar_to_beat(bar)))
+
+func spot_for(hit: Dictionary) -> Vector2:
+	var y: float = opponent_spot.y if hit["by"] == "opponent" else player_spot.y
+	return Vector2(hit["x"], y)
+
+
+func _on_paddle_swung() -> void:
+	judge_swing(0.0)
+
+func _on_bridge_swing(age_s: float, _strength: float) -> void:
+	judge_swing(age_s)
+
+func judge_swing(age_s: float) -> void:
+	var now: float = conductor.song_position - age_s - GameState.input_offset_ms / 1000.0
+	var best: int = -1
+	var best_offset: float = INF
+	for i in range(maxi(flight - 2, 0), mini(flight + 3, hits.size())):
+		if hits[i]["by"] != "player" or hits[i]["judged"]:
+			continue
+		var offset: float = now - hits[i]["time"]
+		if absf(offset) < absf(best_offset):
+			best = i
+			best_offset = offset
+	var ms: float = best_offset * 1000.0
+	if best == -1 or absf(ms) > good_window_ms:
+		return
+	hits[best]["judged"] = true
+	var grade: String = "Perfect" if absf(ms) <= perfect_window_ms else "Good"
+	var blade_x: float = paddle.to_global(Vector2(0, -16)).x
+	if absf(blade_x - hits[best]["x"]) > aim_tolerance_px:
+		grade = "Miss"
+	hits[best]["grade"] = grade
+	hits[best]["hit_time"] = now
+	judged.emit(grade, ms)
+	if grade != "Miss":
+		Bridge.send({"type": "haptic"})
+		var wait: float = hits[best]["time"] - now \
+			- conductor.output_latency - sfx_lead_ms / 1000.0
+		play_player_hit(wait)
+
+func play_player_hit(wait: float) -> void:
+	if wait > 0.0:
+		await get_tree().create_timer(wait).timeout
+	player_hit.emit()

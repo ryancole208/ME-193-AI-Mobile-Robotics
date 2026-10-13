@@ -1,0 +1,12 @@
+# Single venv (../my_env, Python 3.14). MediaPipe 1.0.1 supports 3.14, so no bridge process is needed.
+legoeducation==1.1.1     # pulls in bleak (BLE)
+mediapipe==1.0.1         # Tasks API PoseLandmarker
+opencv-python==5.0.0.93
+numpy==2.5.3
+paho-mqtt==2.1.0         # used by ../mqttlib.py
+pygame-ce==2.5.8         # pygame-ce has Python 3.14 Windows wheels; classic pygame does not
+pytest==9.1.1
+# rhythm/ (Concert Rally)
+sounddevice==0.5.6       # PortAudio output + sample-accurate song clock
+soundfile==0.14.0        # decodes WAV / OGG / MP3
+librosa==1.0.0           # optional: better onset envelope for make_chart.py (numpy fallback built in)

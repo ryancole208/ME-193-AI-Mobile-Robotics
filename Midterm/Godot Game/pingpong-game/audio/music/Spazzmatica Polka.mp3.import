@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bma4b5xkk0c20"
+path="res://.godot/imported/Spazzmatica Polka.mp3-ba9b3e211ee060425a850dcb78fa27f6.mp3str"
+
+[deps]
+
+source_file="res://audio/music/Spazzmatica Polka.mp3"
+dest_files=["res://.godot/imported/Spazzmatica Polka.mp3-ba9b3e211ee060425a850dcb78fa27f6.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,26 @@
+{
+  "song": "Spazzmatica Polka.mp3",
+"tag_id": 10,
+  "title": "Spazzmatica Polka",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+	"title": "Spazzmatica Polka",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Spazzmatica Polka\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 45.3,
+  "tempo": [
+	{"beat": 0, "bpm": 140}
+  ],
+  "downbeat": 0,
+  "start_bar": 1,
+  "end_bar": 55,
+  "pattern": [4],
+  "sections": [
+	{"bars": [17, 24], "pattern": [2, 4]},
+	{"bars": [49, 55], "pattern": [2, 4]}
+  ]
+}

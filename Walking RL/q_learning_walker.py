@@ -33,7 +33,7 @@ import legoeducation as le
 LEARNING_RATE = 0.3       # alpha: how much each new experience overwrites the old Q
 DISCOUNT_FACTOR = 0.8     # gamma: how much future reward matters vs. immediate reward
 EPSILON_START = 0.9       # initial exploration rate (90% random actions at first)
-EPSILON_DECAY = 0.98      # exploration rate is multiplied by this after every step
+EPSILON_DECAY = 0.998      # exploration rate is multiplied by this after every step
 
 # --- Reward constants ---
 ON_TRACK_DEG = 3.0        # |yaw error| below this counts as walking straight

@@ -1,0 +1,60 @@
+extends Sprite2D
+signal swung
+@export var speed: float = 300.0
+@export var min_x: float = 72.0
+@export var max_x: float = 312.0
+@export var yellow_texture: Texture2D
+@export var black_texture: Texture2D
+var yellow_facing: bool = true
+@export var max_roll_degrees: float = 45.0
+@export var invert_x: bool = false
+@export var roll_sign: float = 1.0
+var bridge_pose: bool = false
+var bridge_motor: bool = false
+var flash_tween: Tween
+
+
+func _ready() -> void:
+	Bridge.state_received.connect(_on_bridge_state)
+	Bridge.status_received.connect(_on_bridge_status)
+
+func _process(delta: float) -> void:
+	var direction: float = Input.get_axis("move_left", "move_right")
+	position.x += direction * speed * delta
+	position.x = clampf(position.x, min_x, max_x)
+	if Input.is_action_just_pressed("swing"):
+		swung.emit()
+	if Input.is_action_just_pressed("flip_face"):
+		set_yellow_facing(not yellow_facing)
+	var roll_input: float = Input.get_axis("roll_left", "roll_right")
+	if roll_input != 0.0:
+		set_roll(rotation_degrees + roll_input * 90.0 * delta)
+
+func set_yellow_facing(value: bool) -> void:
+	yellow_facing = value
+	texture = yellow_texture if value else black_texture
+
+func set_roll(degrees: float) -> void:
+	rotation_degrees = clampf(degrees, -max_roll_degrees, max_roll_degrees)
+
+func _on_bridge_status(motor: bool, pose: bool) -> void:
+	bridge_motor = motor
+	bridge_pose = pose
+
+func _on_bridge_state(x: float, roll: float, face: String) -> void:
+	if bridge_pose:
+		if invert_x:
+			x = 1.0 - x
+		position.x = lerpf(min_x, max_x, x)
+	if bridge_motor:
+		set_roll(roll * roll_sign)
+		set_yellow_facing(face == "black")
+
+func flash() -> void:
+	if flash_tween:
+		flash_tween.kill()
+	flash_tween = create_tween()
+	flash_tween.tween_method(_set_flash, 1.0, 0.0, 0.2)
+
+func _set_flash(amount: float) -> void:
+	(material as ShaderMaterial).set_shader_parameter("flash", amount)

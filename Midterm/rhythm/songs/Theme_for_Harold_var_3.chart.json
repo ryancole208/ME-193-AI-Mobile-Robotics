@@ -1,0 +1,22 @@
+{
+  "song": "Theme_for_Harold_var_3.wav",
+  "title": "Theme for Harold var 3",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+    "title": "Theme for Harold var 3",
+    "artist": "Kevin MacLeod",
+    "source": "incompetech.com",
+    "license": "Creative Commons: By Attribution 4.0 License",
+    "license_url": "http://creativecommons.org/licenses/by/4.0/",
+    "credit": "\"Theme for Harold var 3\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 29.0,
+  "tempo": [
+    {"beat": 0, "bpm": 176.016}
+  ],
+  "downbeat": 0,
+  "start_bar": 3,
+  "end_bar": 55,
+  "pattern": [2,4],
+  "sections": []
+}

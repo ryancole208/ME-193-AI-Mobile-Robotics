@@ -1,26 +1,3 @@
-# arm_gui.py -- runs on the PC (regular Python), e.g. from VS Code
-# pip install matplotlib numpy
-#
-# Talks to the ESP32 over Wi-Fi (UDP), so Thonny can stay connected over USB.
-# 1) In Thonny, run arm_esp32.py (it prints the IP it is listening on).
-# 2) Join the ESP32's Wi-Fi network ("ArmDemo") from this computer.
-# 3) Run this script.
-#
-# Coordinates: base at (0, 0), +y is straight up, +x is to the right (mm).
-# Joint angles: 0 = pointing straight up, positive = leaning toward +x (clockwise).
-# Joint 2 is measured relative to link 1.
-#
-# Controls (click the plot window first):
-#   Left-click   set TARGET point (preview of both IK solutions + straight-line path)
-#   Right-click  set the arm's CURRENT point (arm moves there via IK)
-#   g            execute the planned trajectory on the real arm
-#   e            toggle which IK solution is used (elbow left / elbow right)
-#   1            reset arm to the straight-up start pose
-#   x            stop / cancel motion
-#   c            calibrate: press once, jog each joint with its encoder until it is
-#                vertical, press again to save that as the 0 degree point
-#
-# Set ESP_IP = None to run in simulation mode (no hardware needed).
 
 import math
 import socket

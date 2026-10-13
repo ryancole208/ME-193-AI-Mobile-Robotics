@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://cxa6r43wkxmyv"]
+
+[ext_resource type="Script" uid="uid://bjeyprgxgbj5d" path="res://scripts/results.gd" id="1_dd547"]
+[ext_resource type="FontFile" uid="uid://5w1l5ocqakn2" path="res://fonts/PixelOperator.ttf" id="2_ufxfl"]
+
+[node name="Results" type="Control" unique_id=853088978]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dd547")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1274139744]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11372549, 0.16862746, 0.3254902, 1)
+
+[node name="Center" type="VBoxContainer" parent="." unique_id=68048388]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -36.5
+offset_top = -24.0
+offset_right = 36.5
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="SongTitle" type="Label" parent="Center" unique_id=420457382]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_ufxfl")
+theme_override_font_sizes/font_size = 16
+
+[node name="Stats" type="Label" parent="Center" unique_id=1315596142]
+layout_mode = 2
+
+[node name="Prompt" type="Label" parent="Center" unique_id=709889777]
+layout_mode = 2
+text = "Press Enter"

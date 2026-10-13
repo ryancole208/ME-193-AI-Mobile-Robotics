@@ -1,0 +1,28 @@
+{
+  "song": "Latin Industries.mp3",
+"tag_id": 7,
+"theme": "future",
+  "title": "Latin Industries",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+	"title": "Latin Industries",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Latin Industries\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 26,
+  "tempo": [
+	{"beat": 2, "bpm": 122}
+  ],
+  "downbeat": 2,
+  "start_bar": 1,
+  "end_bar": 100,
+  "pattern": [4],
+  "sections": [
+	{"bars": [9, 24], "pattern": [2, 4]},
+	{"bars": [33, 40], "pattern": [2, 4]},
+	{"bars": [57, 64], "pattern": [2, 4]}
+]
+}

@@ -1,0 +1,27 @@
+{
+  "song": "Master of the Feast.mp3",
+"tag_id": 8,
+  "title": "Master of the Feast",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+	"title": "Master of the Feast",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Master of the Feast\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 8,
+  "tempo": [
+	{"beat": 0, "bpm": 122}
+  ],
+  "downbeat": 0,
+  "start_bar": 2,
+  "end_bar": 111,
+  "pattern": [4],
+  "sections": [
+	{"bars": [10, 17], "pattern": [2, 4]},
+	{"bars": [66, 73], "pattern": [2, 4]},
+	{"bars": [82, 105], "pattern": [2, 4]}
+]
+}

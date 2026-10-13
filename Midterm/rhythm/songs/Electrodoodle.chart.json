@@ -1,0 +1,25 @@
+{
+  "song": "Electrodoodle.wav",
+  "title": "Electrodoodle",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+    "title": "Electrodoodle",
+    "artist": "Kevin MacLeod",
+    "source": "incompetech.com",
+    "license": "Creative Commons: By Attribution 4.0 License",
+    "license_url": "http://creativecommons.org/licenses/by/4.0/",
+    "credit": "\"Electrodoodle\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 19.7,
+  "tempo": [
+    {"beat": 0, "bpm": 119.991},
+    {"beat": 260, "bpm": 159.997, "shift_ms": -4.3}
+  ],
+  "downbeat": 0,
+  "start_bar": 3,
+  "end_bar": 88,
+  "pattern": [4],
+  "sections": [
+    {"bars": [66, 73], "pattern": [2, 4]}
+  ]
+}

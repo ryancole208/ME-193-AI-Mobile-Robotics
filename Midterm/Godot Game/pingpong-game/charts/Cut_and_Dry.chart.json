@@ -1,0 +1,27 @@
+{
+  "song": "Cut and Dry.mp3",
+"tag_id": 4,
+"theme": "future",
+  "title": "Cut and Dry",
+  "author": "Kevin MacLeod (Incompetech)",
+  "attribution": {
+	"title": "Cut and Dry",
+	"artist": "Kevin MacLeod",
+	"source": "incompetech.com",
+	"license": "Creative Commons: By Attribution 4.0 License",
+	"license_url": "http://creativecommons.org/licenses/by/4.0/",
+	"credit": "\"Cut and Dry\" Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License\nhttp://creativecommons.org/licenses/by/4.0/"
+  },
+  "offset_ms": 25.0,
+  "tempo": [
+	{"beat": 0, "bpm": 122}
+  ],
+  "downbeat": 0,
+  "start_bar": 1,
+  "end_bar": 111,
+  "pattern": [4],
+  "sections": [
+	{"bars": [33, 40], "pattern": [2, 4]},
+	{"bars": [81, 111], "pattern": [2, 4]}
+]
+}

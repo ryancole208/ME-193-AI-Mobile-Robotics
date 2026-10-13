@@ -1,0 +1,6 @@
+# per-machine / per-player data
+calibration.json
+scores.json
+songs/*.bak
+.pytest_cache/
+previews/

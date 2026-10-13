@@ -9,7 +9,7 @@
    id="svg1"
    inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
    sodipodi:docname="background.svg"
-   inkscape:export-filename="..\pingpong-game\art\background.png"
+   inkscape:export-filename="..\pingpong-game\art\lightning.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -28,14 +28,14 @@
      inkscape:document-units="px"
      showgrid="true"
      inkscape:zoom="1.4142136"
-     inkscape:cx="-30.759145"
-     inkscape:cy="-5.6568542"
-     inkscape:window-width="1920"
-     inkscape:window-height="1112"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer3"
+     inkscape:cx="178.1909"
+     inkscape:cy="-57.629201"
+     inkscape:window-width="957"
+     inkscape:window-height="1103"
+     inkscape:window-x="953"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer5"
      showguides="true">
     <inkscape:grid
        id="grid1"
@@ -57,7 +57,8 @@
   <g
      inkscape:label="sky"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     style="display:inline">
     <rect
        style="fill:#29adff;stroke-width:1.00157"
        id="rect1"
@@ -65,188 +66,6 @@
        height="216"
        x="0"
        y="0" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect22"
-       width="24"
-       height="8"
-       x="108"
-       y="36" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect23"
-       width="8.0708456"
-       height="8"
-       x="115.92915"
-       y="28" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect24"
-       width="24"
-       height="8"
-       x="156"
-       y="24" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect25"
-       width="8.0160561"
-       height="8"
-       x="180"
-       y="24" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect26"
-       width="8"
-       height="4"
-       x="168"
-       y="20" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect27"
-       width="8"
-       height="3.981338"
-       x="168"
-       y="16.018661" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect28"
-       width="8"
-       height="7.9813385"
-       x="176"
-       y="16.018661" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect29"
-       width="7.9568315"
-       height="7.9813385"
-       x="160.04317"
-       y="16.018661" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect30"
-       width="4"
-       height="8"
-       x="188"
-       y="24" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect31"
-       width="3.9900711"
-       height="8"
-       x="152.00993"
-       y="24" />
-    <rect
-       style="fill:#c2c3c7;stroke-width:1.00157"
-       id="rect42"
-       width="4.1327"
-       height="4"
-       x="288"
-       y="20" />
-    <rect
-       style="fill:#c2c3c7;stroke-width:1.00157"
-       id="rect44"
-       width="4"
-       height="4"
-       x="300"
-       y="20" />
-    <rect
-       style="fill:#c2c3c7;stroke-width:1.00157"
-       id="rect46"
-       width="4.1326904"
-       height="4"
-       x="288"
-       y="24" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect49"
-       width="3.712842"
-       height="4"
-       x="311.87872"
-       y="36" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect53"
-       width="3.8787231"
-       height="4"
-       x="308"
-       y="36" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect54"
-       width="4"
-       height="4"
-       x="152"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect55"
-       width="4"
-       height="3"
-       x="188"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect56"
-       width="4"
-       height="1"
-       x="188"
-       y="31" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect57"
-       width="3.9568329"
-       height="3.9813385"
-       x="160.04317"
-       y="16.018661" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect58"
-       width="4"
-       height="4"
-       x="180"
-       y="16" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect59"
-       width="4"
-       height="4"
-       x="44"
-       y="16" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect60"
-       width="5"
-       height="4"
-       x="115"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect61"
-       width="4"
-       height="4"
-       x="120"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect62"
-       width="3.9253521"
-       height="4"
-       x="64.074646"
-       y="16" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect64"
-       width="4"
-       height="4"
-       x="300"
-       y="20" />
-    <rect
-       style="fill:#fff1e8;stroke-width:1.00157"
-       id="rect133"
-       width="16"
-       height="4"
-       x="112"
-       y="44" />
     <rect
        style="fill:#1d2b53;stroke-width:1.00157"
        id="rect196"
@@ -369,8 +188,113 @@
   </g>
   <g
      inkscape:groupmode="layer"
+     id="layer6"
+     inkscape:label="cloud sky"
+     style="display:inline">
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect22"
+       width="24"
+       height="8"
+       x="108"
+       y="36" />
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect24"
+       width="24"
+       height="8"
+       x="156"
+       y="24" />
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect25"
+       width="8.0160561"
+       height="8"
+       x="180"
+       y="24" />
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect26"
+       width="8"
+       height="4"
+       x="168"
+       y="20" />
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect27"
+       width="8"
+       height="3.981338"
+       x="168"
+       y="16.018661" />
+    <rect
+       style="fill:#fff1e8;stroke-width:1.00157"
+       id="rect133"
+       width="16"
+       height="4"
+       x="112"
+       y="44" />
+    <rect
+       style="fill:none"
+       id="rect158"
+       width="96"
+       height="96"
+       x="240"
+       y="-24" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect180"
+       width="7.9204602"
+       height="4"
+       x="116"
+       y="32" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect186"
+       width="7.8403182"
+       height="4"
+       x="160.15968"
+       y="20" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect271"
+       width="8"
+       height="4"
+       x="176"
+       y="20" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect272"
+       width="4"
+       height="4"
+       x="152"
+       y="28" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect273"
+       width="4"
+       height="4"
+       x="188"
+       y="28" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect274"
+       width="32"
+       height="4"
+       x="156"
+       y="32" />
+    <rect
+       style="fill:#fff1e8"
+       id="rect275"
+       width="24"
+       height="4"
+       x="160"
+       y="36" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
      id="layer5"
-     inkscape:label="clouds">
+     inkscape:label="clouds"
+     style="display:inline">
     <rect
        style="fill:#c2c3c7;stroke-width:1.00157"
        id="rect32"
@@ -414,13 +338,6 @@
        x="332"
        y="12" />
     <rect
-       style="fill:#c2c3c7;stroke-width:0.999149"
-       id="rect38"
-       width="39.591553"
-       height="12"
-       x="276"
-       y="28" />
-    <rect
        style="fill:#c2c3c7;stroke-width:1.00157"
        id="rect41"
        width="4"
@@ -449,76 +366,6 @@
        x="300"
        y="24" />
     <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect48"
-       width="4"
-       height="4"
-       x="276"
-       y="36" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect50"
-       width="4"
-       height="4.0534492"
-       x="276"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect51"
-       width="3.5915527"
-       height="4"
-       x="312"
-       y="28" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect52"
-       width="4"
-       height="4"
-       x="280"
-       y="36" />
-    <rect
-       style="fill:#29adff;stroke-width:1.00157"
-       id="rect63"
-       width="4"
-       height="4"
-       x="288"
-       y="20" />
-    <rect
-       style="fill:#1d2b53;stroke-width:1.00157"
-       id="rect198"
-       width="8"
-       height="4"
-       x="276"
-       y="36" />
-    <rect
-       style="fill:#1d2b53;stroke-width:1.00157"
-       id="rect199"
-       width="4"
-       height="4"
-       x="276"
-       y="28" />
-    <rect
-       style="fill:#1d2b53;stroke-width:1.00157"
-       id="rect200"
-       width="5"
-       height="5"
-       x="287"
-       y="19" />
-    <rect
-       style="fill:#1d2b53;stroke-width:1.00157"
-       id="rect201"
-       width="6"
-       height="5"
-       x="312"
-       y="27" />
-    <rect
-       style="fill:#1d2b53;stroke-width:1.00157"
-       id="rect202"
-       width="8"
-       height="6"
-       x="308"
-       y="36" />
-    <rect
        style="fill:#c2c3c7;stroke-width:1.00157"
        id="rect203"
        width="4"
@@ -532,11 +379,60 @@
        height="4"
        x="290"
        y="24" />
+    <rect
+       style="fill:#c2c3c7"
+       id="rect276"
+       width="31.632168"
+       height="4"
+       x="280.36783"
+       y="28" />
+    <rect
+       style="fill:#c2c3c7"
+       id="rect277"
+       width="39.874809"
+       height="4"
+       x="276.12518"
+       y="32" />
+    <rect
+       style="fill:#c2c3c7"
+       id="rect278"
+       width="31.632172"
+       height="4"
+       x="280.36783"
+       y="36" />
+    <rect
+       style="fill:#c2c3c7"
+       id="rect279"
+       width="1"
+       height="12"
+       x="280"
+       y="28" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="lightning"
+     style="display:inline">
+    <rect
+       style="fill:#ffec27;stroke-width:1.00157"
+       id="rect187"
+       width="1"
+       height="16"
+       x="336"
+       y="20" />
+    <rect
+       style="fill:#ffec27;stroke-width:1.00157"
+       id="rect188"
+       width="1"
+       height="8"
+       x="337"
+       y="35" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="hills">
+     inkscape:label="hills"
+     style="display:inline">
     <rect
        style="fill:#00e436;stroke-width:1.00157"
        id="rect5"
@@ -1073,20 +969,6 @@
        x="363"
        y="99" />
     <rect
-       style="fill:#ffec27;stroke-width:1.00157"
-       id="rect187"
-       width="1"
-       height="16"
-       x="336"
-       y="20" />
-    <rect
-       style="fill:#ffec27;stroke-width:1.00157"
-       id="rect188"
-       width="1"
-       height="8"
-       x="337"
-       y="35" />
-    <rect
        style="fill:#c2c3c7;stroke-width:1.00157"
        id="rect189"
        width="2"
@@ -1139,7 +1021,8 @@
   <g
      inkscape:groupmode="layer"
      id="layer4"
-     inkscape:label="castle">
+     inkscape:label="castle"
+     style="display:inline">
     <rect
        style="fill:#c2c3c7;stroke-width:0.764962"
        id="rect135"
@@ -1515,7 +1398,8 @@
   <g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="grass">
+     inkscape:label="grass"
+     style="display:inline">
     <rect
        style="fill:#008751;stroke-width:1.00568"
        id="rect3"

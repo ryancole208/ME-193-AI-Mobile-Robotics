@@ -9,12 +9,14 @@ Packets are JSON over UDP on localhost; ports, rates and flags are in bridge_con
     python bridge.py --no-hardware             # no motor, no webcam: status packets only
     add --no-mqtt / --no-tags / --no-display to any of them to leave the network / the AprilTags /
     the camera view window alone
+    python bridge.py --imu-debug               # motor only + a 10 Hz IMU readout (finding the paddle axes)
 
 The camera view window shows the mirrored webcam image with the pose overlay (as in the other
 games) and every detected tag's outline and ID, whenever the webcam is in use.
 
 Python -> Godot (GODOT_PORT):
-    {"type":"state","x":0-1,"roll":<calmed deg>,"face":"black"|"yellow"}   STATE_RATE_HZ
+    {"type":"state","x":0-1,"roll":<on-screen tilt deg, + = top to the right>,"face":"black"|"yellow"}
+                                STATE_RATE_HZ (tilt and face: paddle_tracker.py, tuned in bridge_config.py)
     {"type":"swing","strength":<float>,"age_ms":<ms from the swing peak to the send>}   each swing
     {"type":"tag","id":<int>}   once when an allowed tag16h5 tag becomes stable (song selection)
     {"type":"tag","id":-1}      once when no stable tag has been seen for TAG_LOST_S
@@ -22,14 +24,23 @@ Python -> Godot (GODOT_PORT):
                                 every STATUS_INTERVAL_S (the tag is repeated here, so Godot never misses it)
 
 Godot -> Python (BRIDGE_PORT), each printed on one line; malformed packets are ignored:
-    {"type":"zero"}     re-zero the roll (like C in rhythm_main); ignored until the motor is calibrated
+    {"type":"zero"}     this grip = straight, BLACK toward the screen; ignored until the motor is calibrated
     {"type":"haptic"}   HAPTIC_PULSE_MS pulse, if HAPTIC_ENABLED and the motor is calibrated
     {"type":"score","streak":<int>,"max_streak":<int>}   the record (highest max_streak since the
                         bridge started) is published to MQTT as a float whenever it goes up
 
 Hold the paddle still with BLACK toward the screen while the motor calibrates: the grip at the
-end of calibration becomes zero roll (again after a reconnect). MQTT publishes 0.0 at start.
+end of calibration becomes zero tilt (again after a reconnect). MQTT publishes 0.0 at start.
 Ctrl+C quits.
+
+Finding the paddle axes (--imu-debug; press Enter to reset the "int" / "turn" / "check" columns):
+    1. Neutral: paddle upright, BLACK toward the screen, still 3 s   -> "grav" axis = TRACK_NEUTRAL_GRAVITY
+    2. Enter, then tilt the top SLOWLY 90 deg to your RIGHT, hold 3 s -> "grav" axis = TRACK_TILT_RIGHT_GRAVITY;
+       "scale?" = TRACK_GYRO_DEG_PER_RAW; "check" accel and gyro should match (else TRACK_GYRO_SIGN = -1)
+    3. Back to neutral, Enter, tilt 90 deg LEFT, hold                -> the mirror image of 2
+    4. Neutral, Enter, flip SLOWLY to yellow (180 deg), hold, back   -> "int" shows the handle axis turning ~180
+    5. Neutral, Enter, flip FAST and back a few times                -> "peak" (gyro range), face changes
+    6. Neutral, Enter, 5 normal swings                               -> HOLD and "[swing]" lines, tilt unchanged
 
 The pygame game (rhythm_main.py) is separate and unchanged.
 """
@@ -72,6 +83,8 @@ def parse_args(argv=None):
     p.add_argument("--no-mqtt", action="store_true", help="don't touch the network")
     p.add_argument("--no-tags", action="store_true", help="no AprilTag song selection")
     p.add_argument("--no-display", action="store_true", help="no camera view window")
+    p.add_argument("--imu-debug", action="store_true",
+                   help="motor only, print the IMU 10x a second to find the paddle axes (Enter resets)")
     return p.parse_args(argv)
 
 
@@ -83,13 +96,6 @@ def start_mqtt():
     mqtt.publish_score(0.0)                      # sent as soon as the broker connection is up
     print(f"[mqtt] publishing the hit-streak record to {mqtt.topic}")
     return mqtt
-
-
-def face_for(raw_roll_deg):
-    """Side physically toward the screen: black in the neutral grip, yellow once twisted past FACE_FLIP_DEG."""
-    if raw_roll_deg is None:
-        return "black"
-    return "black" if abs(raw_roll_deg) <= bc.FACE_FLIP_DEG else "yellow"
 
 
 def x_for(paddle_x_m, table_width_m):
@@ -134,7 +140,7 @@ class Bridge:
     """Turns the motor / pose threads into packets. motor and pose may be None (disabled)."""
 
     def __init__(self, motor=None, pose=None, *, godot=None, swing_link=None, publish_score=None,
-                 tags=None, tag_link=None):
+                 tags=None, tag_link=None, imu_debug=False):
         import config
         self.config = config
         self.motor = motor
@@ -144,10 +150,13 @@ class Bridge:
         self.swing_link = swing_link or UdpSender(bc.GODOT_HOST, bc.GODOT_PORT)
         self.tags = tags                  # TagScanner or None
         self.tag_link = tag_link or UdpSender(bc.GODOT_HOST, bc.GODOT_PORT)   # the scanner thread's own socket
-        self.roll_display = None
+        self.tracker = self.debug = None
         if motor is not None:
-            from rhythm_motor import RollDisplay
-            self.roll_display = RollDisplay()
+            from paddle_tracker import PaddleTracker
+            self.tracker = PaddleTracker()                # tilt + face; fed from on_sample
+            if imu_debug:
+                from imu_debug import ImuDebug
+                self.debug = ImuDebug(self.tracker)
         self.last_x = 0.5                 # held while the wrist is lost (status.pose says so)
         self.last_swing_t = None          # peak time of the latest swing (clock())
         self._zeroed_roll = None          # the RollFilter we last zeroed (a reconnect makes a new one)
@@ -164,6 +173,14 @@ class Bridge:
                                      "age_ms": round(age_ms, 1)})
         if data is not None and bc.PRINT_SENDS:
             print(f"[swing] {data.decode('utf-8')}")
+
+    def on_sample(self, sample, quiet=False, swinging=False, raw_per_g=None, fresh=False):
+        """Every calibrated IMU sample, on the BLE thread (RhythmMotor's on_sample hook)."""
+        if fresh:
+            self.tracker.reset(raw_per_g)               # new calibration: the first sample is the zero
+        self.tracker.update(sample, quiet=quiet, swinging=swinging)
+        if self.debug is not None:
+            self.debug.update(sample)
 
     # -- tag scanner thread -----------------------------------------------------
     def on_tag(self, tag_id, tag_filter=None):
@@ -184,9 +201,9 @@ class Bridge:
         if r is None or r is self._zeroed_roll or r.angle is None:
             return False
         m.calibrate_neutral()
-        self.roll_display.reset()
+        self.tracker.request_zero()
         self._zeroed_roll = r
-        print("[motor] roll zeroed: this grip (BLACK toward the screen) is neutral")
+        print("[motor] zeroed: this grip (upright, BLACK toward the screen) is neutral")
         return True
 
     # -- commands from Godot (main thread) ---------------------------------------
@@ -197,12 +214,12 @@ class Bridge:
     def _on_zero(self, msg):
         m = self.motor
         r = getattr(m, "roll", None) if m is not None else None
-        if r is None or r.angle is None:
+        if r is None or r.angle is None or not self.tracker.ready:
             return "ignored (motor not calibrated)"
-        m.calibrate_neutral()               # same as C in rhythm_main
-        self.roll_display.reset()
+        m.calibrate_neutral()               # the RollFilter (swing roll_deg), same as C in rhythm_main
+        self.tracker.request_zero()         # tilt and face, applied with the next IMU sample
         self._zeroed_roll = r
-        return "roll zeroed"
+        return "tilt and face zeroed"
 
     def _on_haptic(self, msg):
         if not bc.HAPTIC_ENABLED:
@@ -227,23 +244,14 @@ class Bridge:
     def pose_ready(self):
         return bool(self.pose is not None and self.pose.tracking)
 
-    def _swinging(self, now):
-        m = self.motor
-        det = getattr(m, "detector", None)
-        recent = (self.last_swing_t is not None
-                  and now - self.last_swing_t < self.config.ROLL_DISPLAY_SWING_HOLD_S)
-        return (det is not None and det._active is not None) or getattr(m, "quiet", False) or recent
-
     def state(self, now):
         if self.pose is not None:
             px = self.pose.snapshot().paddle_x
             if px is not None:
                 self.last_x = x_for(px, self.config.TABLE_WIDTH_M)
         roll, face = 0.0, "black"
-        if self.motor is not None:
-            raw = self.motor.roll_deg
-            roll = self.roll_display.update(now, raw, self._swinging(now))
-            face = face_for(raw)
+        if self.tracker is not None:
+            roll, face = self.tracker.output
         self.last_state = {"type": "state", "x": round(self.last_x, 4), "roll": round(roll, 2), "face": face}
         return self.last_state
 
@@ -257,9 +265,27 @@ class Bridge:
         self.tag_link.close()
 
 
+def start_enter_listener(debug):
+    """--imu-debug: each Enter in the console resets the integrals (daemon thread)."""
+    import threading
+
+    def run():
+        try:
+            for _ in sys.stdin:
+                debug.reset()
+                print("[imu] ---- reset ----")
+        except (OSError, ValueError):
+            pass
+
+    threading.Thread(target=run, name="ImuDebugEnter", daemon=True).start()
+
+
 def main(argv=None):
     _safe_console()
     args = parse_args(argv)
+    if args.imu_debug:                    # motor only, quiet console: just the readout (and swings)
+        args.no_pose = args.no_tags = args.no_mqtt = args.no_display = True
+        args.no_hardware = args.no_motor = False
     hardware = not args.no_hardware
     use_motor = hardware and bc.MOTOR_ENABLED and not args.no_motor
     use_pose = hardware and bc.POSE_ENABLED and not args.no_pose
@@ -280,7 +306,8 @@ def main(argv=None):
     motor = pose = tags = view = None
     if use_motor:
         from rhythm_motor import RhythmMotor
-        motor = RhythmMotor(on_swing=lambda ev: bridge.on_swing(ev))
+        motor = RhythmMotor(on_swing=lambda ev: bridge.on_swing(ev),
+                            on_sample=lambda *a, **kw: bridge.on_sample(*a, **kw))
     if use_tags:
         from tags import TagScanner
         # Shares PoseTracker's camera; with --no-pose nobody else has it open, so the scanner opens it.
@@ -302,7 +329,7 @@ def main(argv=None):
         if view:
             view.pose = pose
     # Built before any thread starts, so on_swing / on_tag can't miss it.
-    bridge = Bridge(motor, pose, publish_score=mqtt.publish_score, tags=tags)
+    bridge = Bridge(motor, pose, publish_score=mqtt.publish_score, tags=tags, imu_debug=args.imu_debug)
     if motor:
         motor.start()
         print("[motor] scanning -- then hold the paddle still, BLACK toward the screen, to calibrate")
@@ -320,6 +347,11 @@ def main(argv=None):
           f"(motor {'on' if motor else 'off'}, pose {'on' if pose else 'off'}, tags {'on' if tags else 'off'}, "
           f"state {'%d Hz' % bc.STATE_RATE_HZ if hardware else 'off'}); "
           f"listening on {bc.BRIDGE_HOST}:{bc.BRIDGE_PORT}  Ctrl+C to quit")
+    debug_dt = 1.0 / bc.IMU_DEBUG_RATE_HZ
+    next_debug = clock()
+    if bridge.debug:
+        start_enter_listener(bridge.debug)
+        print("[imu] debug readout: press Enter to reset int / peak / turn / check (see bridge.py's docstring)")
     state_dt = 1.0 / bc.STATE_RATE_HZ
     t0 = clock()
     next_state, next_status, next_print = t0, t0, t0 + bc.PRINT_STATE_INTERVAL_S
@@ -341,7 +373,7 @@ def main(argv=None):
                     next_state = now + state_dt
             if now >= next_status:
                 data = bridge.godot.send(bridge.status())
-                if data is not None and bc.PRINT_SENDS:
+                if data is not None and bc.PRINT_SENDS and not bridge.debug:
                     print(f"[status] {data.decode('utf-8')}   motor: {motor.status if motor else 'off'} | "
                           f"pose: {pose.status if pose else 'off'} | tags: {tags.status if tags else 'off'} | "
                           f"view: {view.status if view else 'off'} | "
@@ -349,12 +381,17 @@ def main(argv=None):
                 next_status += bc.STATUS_INTERVAL_S
                 if next_status < now:
                     next_status = now + bc.STATUS_INTERVAL_S
-            if hardware and now >= next_print:
+            if bridge.debug and now >= next_debug:
+                print(bridge.debug.line())
+                next_debug = max(next_debug + debug_dt, now)
+            if hardware and now >= next_print and not bridge.debug:
                 rate = states_sent / max(1e-6, now - print_t0)
                 print(f"[state]  {encode(bridge.last_state).decode('utf-8')}   ({rate:.1f} Hz)")
                 states_sent, print_t0 = 0, now
                 next_print = now + bc.PRINT_STATE_INTERVAL_S
             wake = min(next_state, next_status) if hardware else next_status
+            if bridge.debug:
+                wake = min(wake, next_debug)
             # Sleeps (so the BLE / camera threads run) until the next send -- or a command arrives.
             commands.wait(min(0.05, wake - clock()))
     except KeyboardInterrupt:

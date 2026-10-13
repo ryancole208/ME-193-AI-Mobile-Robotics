@@ -166,3 +166,33 @@ def test_quiet_window_blocks_swings(monkeypatch):
     for i in range(5):
         d.update(ImuSample(i * DT, 0, 0, G, 0, 0, 0))
     assert all(d.update(s, ignore=True) is None for s in swing_samples(1.0))
+
+
+def test_on_sample_hook_sees_every_calibrated_sample_and_swings_are_unchanged(monkeypatch):
+    clock = {"t": 0.0}
+    monkeypatch.setattr(rhythm_motor, "clock", lambda: clock["t"])
+    swings, seen = [], []
+    m = RhythmMotor(on_swing=swings.append, on_sample=lambda s, **kw: seen.append((s.t, kw)))
+    m._dm = SimpleNamespace(imu_device=SimpleNamespace(accelerometerX=0, accelerometerY=0, accelerometerZ=G,
+                                                       gyroscopeX=0, gyroscopeY=0, gyroscopeZ=0))
+    m.calibrator = GravityCalibrator(n=5, max_rel_std=0.05, fallback=1.0)
+    imu = m._dm.imu_device
+    for i in range(5):                                    # calibration: no hook calls yet
+        clock["t"] = i * DT
+        m._on_notification(None)
+    assert seen == []
+    m.detector = detector()                               # a gyro-only detector, as in the tests above
+    for i, s in enumerate([ImuSample(0, 0, 0, G, 0, 0, 0)] * 3 + swing_samples(0)):
+        clock["t"] = 1.0 + i * DT
+        imu.gyroscopeY = s.gy
+        m._on_notification(None)
+    assert len(seen) == 3 + 8
+    assert seen[0][1] == {"quiet": False, "swinging": False, "raw_per_g": G, "fresh": True}
+    assert all(not kw["fresh"] for _, kw in seen[1:])
+    assert any(kw["swinging"] for _, kw in seen)
+    assert len(swings) == 1 and swings[0].t == pytest.approx(1.0 + (3 + 2) * DT)
+
+
+def test_rhythm_motor_still_works_without_the_hook():
+    m = RhythmMotor(on_swing=lambda e: None)
+    assert m._on_sample is None

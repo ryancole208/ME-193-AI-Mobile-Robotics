@@ -59,12 +59,20 @@ class RhythmSwingDetector(SwingDetector):
 
 
 class RhythmMotor(MotorIMU):
-    """on_swing(RhythmSwing) runs on the BLE thread -- keep it quick (put it on a queue)."""
+    """on_swing(RhythmSwing) runs on the BLE thread -- keep it quick (put it on a queue).
 
-    def __init__(self, on_swing, **kw):
+    on_sample(sample, quiet, swinging, raw_per_g, fresh), optional, also runs on the BLE thread,
+    once per IMU sample after calibration (after the swing detector has seen it): quiet = a haptic
+    pulse is running, swinging = the detector is measuring a swing, fresh = first sample after a
+    (re)calibration.
+    """
+
+    def __init__(self, on_swing, on_sample=None, **kw):
         super().__init__(on_swing=on_swing, **kw)
         self.cooldown_s = config.RHYTHM_SWING_COOLDOWN_S
         self._pulse_ms = 0
+        self._on_sample = on_sample
+        self._fresh = False
 
     def set_cooldown(self, seconds):
         self.cooldown_s = seconds
@@ -109,6 +117,7 @@ class RhythmMotor(MotorIMU):
                 if raw_per_g is not None:
                     self.detector = RhythmSwingDetector(raw_per_g, cooldown_s=self.cooldown_s)
                     self.roll = RollFilter(raw_per_g)
+                    self._fresh = True
                     note = " (FALLBACK - paddle moved during calibration)" if self.calibrator.used_fallback else ""
                     print(f"[motor] IMU calibrated: 1 g = {raw_per_g:.1f} raw units{note}")
                     self.status = f"connected: {self.device_name or 'Double Motor'}"
@@ -122,6 +131,10 @@ class RhythmMotor(MotorIMU):
             event = self.detector.update(sample, ignore=quiet)
             if event is not None:
                 event = replace(event, roll_deg=self.roll.roll_at(event.t))
+            swinging = self.detector._active is not None
+            raw_per_g, fresh, self._fresh = self.detector.raw_per_g, self._fresh, False
+        if self._on_sample is not None:
+            self._on_sample(sample, quiet=quiet, swinging=swinging, raw_per_g=raw_per_g, fresh=fresh)
         if event is not None:
             self._on_swing(event)
 

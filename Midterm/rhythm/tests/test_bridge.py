@@ -3,10 +3,13 @@
 import json
 import socket
 
+import pytest
+
 import bridge
 import bridge_config as bc
 import config
-from bridge import Bridge, face_for, parse_command, x_for
+from bridge import Bridge, parse_command, x_for
+from imu_sim import G, Paddle
 from rhythm_motor import RhythmSwing
 from udp_link import UdpReceiver, UdpSender
 
@@ -52,6 +55,16 @@ def calibrated_motor():
     return m
 
 
+def sim_paddle():
+    """A simulated hub mounted the way bridge_config's axis mapping says."""
+    return Paddle(bc.TRACK_NEUTRAL_GRAVITY, bc.TRACK_TILT_RIGHT_GRAVITY)
+
+
+def feed(b, samples, swinging=False, fresh=False):
+    for i, s in enumerate(samples):
+        b.on_sample(s, quiet=False, swinging=swinging, raw_per_g=G, fresh=fresh and i == 0)
+
+
 class FakeSnap:
     def __init__(self, paddle_x):
         self.paddle_x = paddle_x
@@ -75,14 +88,6 @@ def cmd(obj):
     msg, why = parse_command(json.dumps(obj).encode("utf-8"))
     assert why is None, why
     return msg
-
-
-def test_face_follows_the_raw_roll():
-    assert face_for(None) == "black"
-    assert face_for(0.0) == "black"
-    assert face_for(bc.FACE_FLIP_DEG) == "black"
-    assert face_for(-bc.FACE_FLIP_DEG - 1) == "yellow"
-    assert face_for(170.0) == "yellow"
 
 
 def test_x_maps_the_table_to_0_1_and_clamps():
@@ -129,13 +134,32 @@ def test_roll_zeroed_once_per_roll_filter_after_its_first_sample():
     assert b.zero_after_calibration() and m.zeroed == 2
 
 
-def test_state_face_from_raw_roll_but_roll_is_calmed():
-    m = FakeMotor()
-    b = make(motor=m)
-    m.roll_deg = 150.0
+def test_state_roll_and_face_come_from_the_paddle_tracker(monkeypatch):
+    monkeypatch.setattr(bc, "TRACK_GYRO_DEG_PER_RAW", 0.1)      # the simulator's gyro scale
+    b, p = make(motor=calibrated_motor()), sim_paddle()
+    assert b.state(0.0)["roll"] == 0.0 and b.state(0.0)["face"] == "black"   # before any sample
+    feed(b, p.hold(0.5), fresh=True)
+    feed(b, p.move(0.5, tilt=50))
+    feed(b, p.hold(0.5))
     st = b.state(1.0)
-    assert st["face"] == "yellow"
-    assert abs(st["roll"]) <= config.ROLL_DISPLAY_MAX_DEG
+    shown = (50 - bc.TRACK_DEADZONE_DEG) * bc.TRACK_GAIN
+    assert st["roll"] == pytest.approx(shown, abs=1.5) and st["face"] == "black"
+    feed(b, p.move(0.3, flip=180))
+    feed(b, p.hold(0.5))
+    st = b.state(2.0)
+    assert st["roll"] == pytest.approx(shown, abs=1.5) and st["face"] == "yellow"
+    assert set(st) == {"type", "x", "roll", "face"}              # the packet format is unchanged
+
+
+def test_a_new_calibration_restarts_the_tracker(monkeypatch):
+    monkeypatch.setattr(bc, "TRACK_GYRO_DEG_PER_RAW", 0.1)
+    b, p = make(motor=calibrated_motor()), sim_paddle()
+    feed(b, p.hold(0.3), fresh=True)
+    feed(b, p.move(0.3, tilt=40))
+    feed(b, p.hold(0.3))
+    assert b.state(1.0)["roll"] > 10
+    feed(b, p.hold(0.3), fresh=True)                             # reconnect: this grip is neutral now
+    assert b.state(2.0)["roll"] == pytest.approx(0.0, abs=0.5)
 
 
 def test_swing_is_sent_at_once_with_age_since_the_peak(monkeypatch):
@@ -161,13 +185,18 @@ def test_udp_sender_delivers_one_json_packet():
 
 # -- commands from Godot (4243) ------------------------------------------------
 
-def test_zero_rezeroes_like_the_c_key():
+def test_zero_rezeroes_tilt_and_face(monkeypatch):
+    monkeypatch.setattr(bc, "TRACK_GYRO_DEG_PER_RAW", 0.1)
     m = calibrated_motor()
-    b = make(motor=m)
-    b.roll_display.shown, b.roll_display.bias = 25.0, 4.0
-    assert b.handle(cmd({"type": "zero"})) == "roll zeroed"
-    assert m.zeroed == 1
-    assert b.roll_display.shown == 0.0 and b.roll_display.bias == 0.0
+    b, p = make(motor=m), sim_paddle()
+    feed(b, p.hold(0.3), fresh=True)
+    feed(b, p.move(0.3, tilt=30))
+    feed(b, p.hold(0.3))
+    assert b.state(1.0)["roll"] > 10
+    assert b.handle(cmd({"type": "zero"})) == "tilt and face zeroed"
+    assert m.zeroed == 1                         # the RollFilter too (swing roll_deg), like the C key
+    feed(b, p.hold(0.1))                         # applied with the next IMU sample
+    assert b.state(2.0)["roll"] == pytest.approx(0.0, abs=0.5) and b.state(2.0)["face"] == "black"
     assert not b.zero_after_calibration()        # already zeroed this filter: no second auto-zero
 
 
@@ -176,6 +205,8 @@ def test_zero_is_ignored_until_the_motor_is_calibrated():
     b = make(motor=m)
     assert "ignored" in b.handle(cmd({"type": "zero"}))
     m.roll = FakeRoll(angle=None)                # calibrated, but no sample yet
+    assert "ignored" in b.handle(cmd({"type": "zero"}))
+    m.roll = FakeRoll(angle=2.0)                 # the RollFilter has a sample, the tracker not yet
     assert "ignored" in b.handle(cmd({"type": "zero"}))
     assert "ignored" in make().handle(cmd({"type": "zero"}))     # --no-motor
     assert m.zeroed == 0

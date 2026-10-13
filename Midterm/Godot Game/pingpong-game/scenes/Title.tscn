@@ -49,5 +49,5 @@ text = "Ping Pong Midterm"
 
 [node name="Prompt" type="Label" parent="Center" unique_id=2019947210]
 layout_mode = 2
-text = "    ENTER: PLAY
+text = "    ENTER/SWING: PLAY
     K: CALIBRATE  O: OPTIONS  C: CREDITS"

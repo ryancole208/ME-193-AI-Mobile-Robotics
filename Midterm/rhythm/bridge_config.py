@@ -45,12 +45,47 @@ PRINT_SENDS = True                     # print every status and swing packet (st
 # =============================================================================
 # Paddle
 # =============================================================================
-# "face" = the side physically toward the screen, from the RAW roll (the calmed roll is capped
-# at ROLL_DISPLAY_MAX_DEG and fades to 0, so it can never flip). Neutral grip = black toward the
-# screen; past this twist the yellow side faces the screen.
-FACE_FLIP_DEG = 90.0
-HAPTIC_PULSE_MS = 80                   # fixed pulse length for every {"type":"haptic"} (pygame's longest
+HAPTIC_PULSE_MS = 80                  # fixed pulse length for every {"type":"haptic"} (pygame's longest
                                        # pulse); the IMU ignores swings for this + RHYTHM_HAPTIC_SETTLE_MS
+
+# =============================================================================
+# Paddle tilt and face (paddle_tracker.py) -> state.roll and state.face
+# =============================================================================
+# Neutral grip: paddle upright, BLACK face toward the screen.
+#   TILT = rotating it in the screen plane (windshield wiper)  -> state.roll, + = top to your right
+#   FLIP = twisting the handle so the other face points at the screen -> state.face
+#   SWING = the forward hit (swing detection is ../config.py's, unchanged)
+# Axis mapping: run  python bridge.py --imu-debug  and copy the "grav" readings ("+x", "-z", ...):
+TRACK_NEUTRAL_GRAVITY = "+x"           # PLACEHOLDER gravity axis in the neutral grip (= along the handle)
+TRACK_TILT_RIGHT_GRAVITY = "+y"        # PLACEHOLDER gravity axis after tilting the top 90 deg to your RIGHT
+TRACK_GYRO_DEG_PER_RAW = 0.1           # PLACEHOLDER gyro raw -> deg/s (--imu-debug prints a "scale?" check)
+TRACK_GYRO_SIGN = 1.0                  # -1 if --imu-debug shows gyro tilt and accel tilt with opposite signs
+
+# Tilt filter and output
+TRACK_ACCEL_TAU_S = 0.20               # complementary filter: the tilt reaches the accelerometer's in ~this
+TRACK_ACCEL_TOLERANCE_G = 0.20         # accel trusted only while | |a| - 1 g | is below this
+TRACK_MIN_PLANE_GRAVITY = 0.5          # ...and at least this much gravity lies in the screen plane (x 1 g)
+TRACK_DEADZONE_DEG = 4.0               # tilts smaller than this show as straight
+TRACK_GAIN = 0.6                       # shown tilt = (real tilt - deadzone) x this (reduced, as before)
+TRACK_TILT_MAX_DEG = 90.0              # clamp (Godot's Paddle max_roll_degrees clamps again)
+TRACK_SMOOTH_S = 0.05                  # light output smoothing (time constant; 0 = none)
+
+# Flip (face)
+TRACK_FLIP_TO_YELLOW_DEG = 110.0       # black -> yellow once the twist passes this...
+TRACK_FLIP_TO_BLACK_DEG = 70.0         # ...and back to black below this (hysteresis: no flicker edge-on)
+TRACK_FLIP_DEBOUNCE_S = 0.06           # the new face must hold this long before it is sent
+TRACK_FLIP_SETTLE_S = 2.0              # while still, the twist settles to the face shown (gyro drift)
+TRACK_GYRO_DEADZONE_DPS = 2.0          # twist rates below this are ignored (noise)
+
+# Swings, gyro bias, stillness
+TRACK_SWING_HOLD_S = 0.25              # tilt and face hold during a swing / haptic pulse and this long after
+TRACK_SWING_REWIND_S = 0.12            # at swing onset, go back to the tilt/face from this long before
+TRACK_STILL_GYRO_DPS = 20.0            # slower than this (and |a| ~ 1 g) = still: face settling allowed
+TRACK_BIAS_STILL_DPS = 6.0             # slower than this = gyro bias is learnt...
+TRACK_BIAS_TAU_S = 4.0                 # ...with this time constant
+
+# --imu-debug
+IMU_DEBUG_RATE_HZ = 10                 # debug lines per second
 
 # =============================================================================
 # AprilTag song selection (tag16h5, read from the webcam frames PoseTracker already grabs;

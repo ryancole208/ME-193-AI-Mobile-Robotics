@@ -3,6 +3,11 @@
 [ext_resource type="Texture2D" uid="uid://bcwr8keus1dv2" path="res://art/background.png" id="1_8rem4"]
 [ext_resource type="Texture2D" uid="uid://cypnli0omphsd" path="res://art/flag.png" id="2_kewym"]
 [ext_resource type="Script" uid="uid://b7jb33pl17k2p" path="res://scripts/flag.gd" id="3_6c5u0"]
+[ext_resource type="Texture2D" uid="uid://dxwu2jji0vmsi" path="res://art/clouds_sun.png" id="4_1hwpr"]
+[ext_resource type="Script" uid="uid://dtgjlip6dd0kp" path="res://scripts/sway.gd" id="5_dexii"]
+[ext_resource type="Texture2D" uid="uid://wipwqk50nl0f" path="res://art/clouds_dark.png" id="6_yd2gm"]
+[ext_resource type="Texture2D" uid="uid://dj7lp5dpracl" path="res://art/lightning.png" id="7_0hg5s"]
+[ext_resource type="Script" uid="uid://cbk61lqaslebe" path="res://scripts/lightning.gd" id="8_jl6nj"]
 
 [node name="Stage" type="Node2D" unique_id=811980437]
 
@@ -57,3 +62,26 @@ texture = ExtResource("2_kewym")
 centered = false
 hframes = 2
 script = ExtResource("3_6c5u0")
+
+[node name="CloudSun" type="Sprite2D" parent="." unique_id=1250878596]
+texture = ExtResource("4_1hwpr")
+centered = false
+script = ExtResource("5_dexii")
+
+[node name="CloudDark" type="Sprite2D" parent="." unique_id=1157782204]
+texture = ExtResource("6_yd2gm")
+centered = false
+script = ExtResource("5_dexii")
+period_s = 11.0
+
+[node name="Lightning" type="Sprite2D" parent="." unique_id=1680158690]
+texture = ExtResource("7_0hg5s")
+centered = false
+script = ExtResource("8_jl6nj")
+
+[node name="ColorRect" type="ColorRect" parent="Lightning" unique_id=1855928461]
+offset_left = 220.0
+offset_right = 383.0
+offset_bottom = 112.0
+mouse_filter = 2
+color = Color(1, 0.94509804, 0.9098039, 0.23529412)

@@ -7,6 +7,7 @@ var last_x: float = 0.0
 var walked: float = 0.0
 
 func _ready() -> void:
+	add_to_group("opponent")
 	last_x = global_position.x
 
 func _process(_delta: float) -> void:

@@ -13,6 +13,7 @@ var output_latency: float = 0.0
 var tempo_map: Array[Dictionary] = []
 @export var debug_start_bar: int = 0
 @export var count_in_beats: int = 4
+@export var web_extra_latency_ms: float = 200.0
 var start_time: float = 0.0
 var counting_in: bool = false
 var count_in_start_usec: int = 0
@@ -23,6 +24,8 @@ var music_start_beat: int = 0
 func _ready() -> void:
 	chart_path = GameState.chart_path
 	output_latency = AudioServer.get_output_latency()
+	#if OS.has_feature("web"):
+	#	output_latency += web_extra_latency_ms / 1000.0
 	chart = load_chart(chart_path)
 	stream = load("res://audio/music/" + chart["song"].get_basename() + ".mp3")
 	offset = chart["offset_ms"] / 1000.0

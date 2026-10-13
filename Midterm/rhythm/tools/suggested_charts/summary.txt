@@ -1,0 +1,34 @@
+Suggested [2,4] sections  (target 33%, phrase 8 bars, intro 8 bars easy, min section 4, W_RMS 0.5, W_ONSET 0.5)
+
+Celtic_Impulse.chart.json  (Celtic Impulse.mp3, bars 2-89, 88 playable)
+  sections: 50-65, 74-89  -> [2, 4]
+  hard: 32/88 bars = 36%
+
+Cut_and_Dry.chart.json  (Cut and Dry.mp3, bars 1-111, 111 playable)
+  sections: 33-40, 81-111  -> [2, 4]
+  hard: 39/111 bars = 35%
+
+Kick_Shock.chart.json  (Kick Shock.mp3, bars 1-34, 34 playable)
+  sections: 25-34  -> [2, 4]
+  hard: 10/34 bars = 29%
+
+Latin_Industries.chart.json  (Latin Industries.mp3, bars 1-100, 100 playable)
+  sections: 9-24, 33-40, 57-64  -> [2, 4]
+  hard: 32/100 bars = 32%
+
+Master_of_the_Feast.chart.json  (Master of the Feast.mp3, bars 2-111, 110 playable)
+  sections: 10-17, 66-73, 82-105  -> [2, 4]
+  hard: 40/110 bars = 36%
+
+Pinball_Spring_160.chart.json  (Pinball Spring 160.mp3, bars 1-111, 111 playable)
+  sections: 33-56, 97-111  -> [2, 4]
+  hard: 39/111 bars = 35%
+
+Spazzmatica_Polka.chart.json  (Spazzmatica Polka.mp3, bars 1-55, 55 playable)
+  sections: 17-24, 49-55  -> [2, 4]
+  hard: 15/55 bars = 27%
+
+Theme_for_Harold_var_3.chart.json  (Theme for Harold var 3.mp3, bars 1-56, 56 playable)
+  sections: 17-32  -> [2, 4]
+  hard: 16/56 bars = 29%
+  vs hand-made: 24 hand-made hard bars, 8 of them also suggested (33%); 8 suggested bars are new

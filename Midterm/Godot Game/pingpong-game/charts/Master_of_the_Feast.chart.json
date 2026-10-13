@@ -19,5 +19,9 @@
   "start_bar": 2,
   "end_bar": 111,
   "pattern": [4],
-  "sections": []
+  "sections": [
+	{"bars": [10, 17], "pattern": [2, 4]},
+	{"bars": [66, 73], "pattern": [2, 4]},
+	{"bars": [82, 105], "pattern": [2, 4]}
+]
 }

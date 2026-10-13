@@ -1,6 +1,7 @@
 {
   "song": "Pinball Spring 160.mp3",
 "tag_id": 9,
+"theme": "retro",
   "title": "Pinball Spring 160",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -19,5 +20,8 @@
   "start_bar": 1,
   "end_bar": 111,
   "pattern": [4],
-  "sections": []
+  "sections": [
+	{"bars": [33, 56], "pattern": [2, 4]},
+	{"bars": [97, 111], "pattern": [2, 4]}
+]
 }

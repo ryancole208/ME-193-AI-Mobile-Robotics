@@ -1,6 +1,7 @@
 {
   "song": "Kick Shock.mp3",
 "tag_id": 6,
+"theme": "future",
   "title": "Kick Shock",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -19,5 +20,7 @@
   "start_bar": 1,
   "end_bar": 34,
   "pattern": [4],
-  "sections": []
+  "sections": [
+	{"bars": [25, 34], "pattern": [2, 4]}
+]
 }

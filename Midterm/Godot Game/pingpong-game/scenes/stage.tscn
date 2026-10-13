@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://dtshvxvphkcft"]
 
 [ext_resource type="Texture2D" uid="uid://bcwr8keus1dv2" path="res://art/background.png" id="1_8rem4"]
+[ext_resource type="Texture2D" uid="uid://cypnli0omphsd" path="res://art/flag.png" id="2_kewym"]
+[ext_resource type="Script" uid="uid://b7jb33pl17k2p" path="res://scripts/flag.gd" id="3_6c5u0"]
 
 [node name="Stage" type="Node2D" unique_id=811980437]
 
@@ -39,3 +41,19 @@ color = Color(0.49411765, 0.14509805, 0.3254902, 1)
 [node name="Backdrop" type="Sprite2D" parent="." unique_id=851637815]
 texture = ExtResource("1_8rem4")
 centered = false
+
+[node name="FlagLight" type="Sprite2D" parent="." unique_id=1117335703]
+modulate = Color(1, 0, 0.3019608, 1)
+position = Vector2(90, 80)
+texture = ExtResource("2_kewym")
+centered = false
+hframes = 2
+script = ExtResource("3_6c5u0")
+
+[node name="FlagDark" type="Sprite2D" parent="." unique_id=1565116156]
+modulate = Color(0.49411765, 0.14509805, 0.3254902, 1)
+position = Vector2(346, 48)
+texture = ExtResource("2_kewym")
+centered = false
+hframes = 2
+script = ExtResource("3_6c5u0")

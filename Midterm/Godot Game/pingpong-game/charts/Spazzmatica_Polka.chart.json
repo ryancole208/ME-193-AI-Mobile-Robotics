@@ -1,6 +1,7 @@
 {
   "song": "Spazzmatica Polka.mp3",
 "tag_id": 10,
+"theme": "retro",
   "title": "Spazzmatica Polka",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -19,5 +20,8 @@
   "start_bar": 1,
   "end_bar": 55,
   "pattern": [4],
-  "sections": []
+  "sections": [
+	{"bars": [17, 24], "pattern": [2, 4]},
+	{"bars": [49, 55], "pattern": [2, 4]}
+]
 }

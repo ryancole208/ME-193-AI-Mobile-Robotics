@@ -1,6 +1,7 @@
 {
   "song": "Latin Industries.mp3",
 "tag_id": 7,
+"theme": "future",
   "title": "Latin Industries",
   "author": "Kevin MacLeod (Incompetech)",
   "attribution": {
@@ -19,5 +20,9 @@
   "start_bar": 1,
   "end_bar": 100,
   "pattern": [4],
-  "sections": []
+  "sections": [
+	{"bars": [9, 24], "pattern": [2, 4]},
+	{"bars": [33, 40], "pattern": [2, 4]},
+	{"bars": [57, 64], "pattern": [2, 4]}
+]
 }

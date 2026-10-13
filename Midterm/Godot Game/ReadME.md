@@ -22,4 +22,5 @@
 
 ## Credits
 Music by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.
+"Jumper" by Waterflame (waterflame.com), used with credit per Waterflame's music usage terms.
 Font: Pixel Operator by Jayvee Enaguas (CC0). Art by [your name].

@@ -11,7 +11,7 @@ pose and the AprilTags are picked up.
 
 Runs on its own thread (all OpenCV window calls stay on it), so drawing never delays the
 bridge's packets. Frames arrive through on_frame (PoseTracker's hook, or the tag scanner's own
-camera). Closing the window (or Esc / Q in it) only closes the view; the bridge keeps running.
+camera). Closing the window (or Y in it) only closes the view; the bridge keeps running.
 """
 
 import threading
@@ -144,7 +144,7 @@ class CameraView:
                     except Exception as e:
                         self.status = f"error: {e}"
                 key = cv2.waitKey(1) & 0xFF            # also pumps the window's events
-                if key in (27, ord("q")) or cv2.getWindowProperty(self.title, cv2.WND_PROP_VISIBLE) < 1:
+                if key in (ord("y"), ord("Y")) or cv2.getWindowProperty(self.title, cv2.WND_PROP_VISIBLE) < 1:
                     self.status = "closed"
                     print("[view] camera view closed (the bridge keeps running)")
                     break

@@ -33,10 +33,10 @@ globals().update({k: v for k, v in vars(_midterm).items() if k.isupper() and k n
 del _spec, _midterm
 
 # =============================================================================
-# Double Motor (the paddle): only connect to the hub paired with this Connection Card
+# Double Motor (the paddle): no Connection Card, so connect to the nearest (strongest RSSI) motor
 # =============================================================================
-BLE_CARD_COLOR = 2                       # legoeducation.LEGO_COLOR_YELLOW (yellow card)
-BLE_CARD_SERIAL = "0994"                 # a string keeps the leading zero; None = any Double Motor
+BLE_CARD_COLOR = None
+BLE_CARD_SERIAL = None
 
 # =============================================================================
 # Window

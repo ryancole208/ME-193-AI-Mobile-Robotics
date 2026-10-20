@@ -128,6 +128,7 @@ opponent_spot = Vector2(192, 112)
 bounce_at = 0.5
 opponent = NodePath("../OpponentPaddle")
 paddle = NodePath("../paddle")
+aim_tolerance_px = 10000.0
 
 [node name="ScoreLabel" type="Label" parent="." unique_id=1775185815 node_paths=PackedStringArray("conductor")]
 offset_right = 300.0

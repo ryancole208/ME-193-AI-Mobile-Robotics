@@ -104,4 +104,4 @@ TAG_ERROR_CORRECTION = 0.0             # cv2.aruco errorCorrectionRate: 0 = exac
 # =============================================================================
 DISPLAY_FPS = 15                       # window refreshes per second (its own thread)
 DISPLAY_WIDTH = 640                    # px; the camera image is scaled to this width
-DISPLAY_TITLE = "Bridge camera (Esc closes this view)"
+DISPLAY_TITLE = "Bridge camera (Y closes this view)"

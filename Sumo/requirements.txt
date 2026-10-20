@@ -1,0 +1,5 @@
+# Sumo laptop brain. Python 3.14+ (legoeducation requires it).
+# Install into the repo's my_env:  my_env\Scripts\python.exe -m pip install -r Sumo\requirements.txt
+legoeducation>=1.1.1      # official LEGO Education package (uses bleak for Bluetooth)
+paho-mqtt>=2.0,<3         # used through ../mqttlib.py
+pytest>=8                 # automated tests

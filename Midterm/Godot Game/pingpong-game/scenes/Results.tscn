@@ -43,6 +43,14 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_ufxfl")
 theme_override_font_sizes/font_size = 16
 
+[node name="Grade" type="Label" parent="Center" unique_id=1852544344]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("2_ufxfl")
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+
 [node name="Stats" type="Label" parent="Center" unique_id=1315596142]
 layout_mode = 2
 

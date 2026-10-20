@@ -5,3 +5,7 @@ __pycache__/
 .env
 *.png
 ArduinoApps/
+Midterm/Godot Game/pingpong-game/audio/music/BackOnTrackFull.mp3
+*.import
+*.mp3
+*.json

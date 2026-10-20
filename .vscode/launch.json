@@ -9,6 +9,124 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "python": "${workspaceFolder}/venv/bin/python"
+        },
+        {
+            "name": "Sumo: ROUND (real robot + UNO Q)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/sumo.py",
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: dry run (--no-motors)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/sumo.py",
+            "args": ["--no-motors"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: LEGO only (--no-unoq)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/sumo.py",
+            "args": ["--no-unoq"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: LEGO only, dry run (--no-unoq --no-motors)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/sumo.py",
+            "args": ["--no-unoq", "--no-motors"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: simulator (--sim, pick a scenario)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/sumo.py",
+            "args": ["--sim", "--scenario", "${input:sumoScenario}"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: calibrate color sensor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/calibrate_color.py",
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: hardware check (no motors)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/hardware_check.py",
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: hardware check + motor spin test (WHEELS LIFTED)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Sumo/hardware_check.py",
+            "args": ["--spin"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        },
+        {
+            "name": "Sumo: run automated tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["-v"],
+            "cwd": "${workspaceFolder}/Sumo",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/my_env/Scripts/python.exe",
+            "env": {"PYTHONIOENCODING": "utf-8"}
+        }
+    ],
+    "inputs": [
+        {
+            "id": "sumoScenario",
+            "type": "pickString",
+            "description": "Simulator scenario (see Sumo/README.md)",
+            "default": "full_round",
+            "options": [
+                "full_round",
+                "edge_forward",
+                "pushed_out_backward",
+                "fast_shove_out",
+                "pushed_out_backward_grip",
+                "crossed_forward",
+                "pivot_onto_tape",
+                "chase",
+                "color_dropout",
+                "vision_stale",
+                "broker_down",
+                "unoq_offline"
+            ]
         }
     ]
 }

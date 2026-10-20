@@ -341,7 +341,7 @@ def main(argv=None):
         pose.start()
     if view:
         view.start()
-        print("[view] camera view window open (Esc / Q in it, or closing it, hides only the view)")
+        print("[view] camera view window open (Y in it, or closing it, hides only the view)")
 
     print(f"[bridge] sending to Godot at {bc.GODOT_HOST}:{bc.GODOT_PORT}  "
           f"(motor {'on' if motor else 'off'}, pose {'on' if pose else 'off'}, tags {'on' if tags else 'off'}, "

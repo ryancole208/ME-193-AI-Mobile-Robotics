@@ -1,0 +1,6 @@
+name: Sumo Opponent Tracker
+description: This app watches the camera and looks for the other robot. When it finds it, the lights on the UNO Q show where it is and how close it is.
+ports: []
+bricks:
+- arduino:web_ui: {}
+icon: 🤖

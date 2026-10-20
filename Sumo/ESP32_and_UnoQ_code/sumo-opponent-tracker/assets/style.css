@@ -1,0 +1,51 @@
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: #eee;
+  margin: 0;
+  padding: 16px;
+  max-width: 900px;
+}
+h1 { font-size: 1.3em; }
+h2 { font-size: 1.1em; border-bottom: 1px solid #333; padding-bottom: 4px; }
+h3 { font-size: 0.95em; color: #aaa; margin: 4px 0; }
+section { margin: 20px 0; }
+.images { display: flex; gap: 16px; flex-wrap: wrap; }
+.images img {
+  width: 320px;
+  max-width: 100%;
+  border: 1px solid #444;
+  background: #000;
+  image-rendering: pixelated;
+}
+#liveImage { cursor: crosshair; }
+.learn-buttons { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+#status { font-family: monospace; white-space: pre-wrap; color: #9f9; margin-bottom: 8px; }
+.legend { font-size: 0.85em; color: #aaa; }
+.monospace { font-family: monospace; white-space: pre-wrap; color: #ccc; margin-top: 8px; }
+button {
+  font-size: 0.95em;
+  padding: 6px 14px;
+  margin: 4px 4px 4px 0;
+  cursor: pointer;
+}
+input[type="number"] { font-size: 0.95em; padding: 4px; width: 120px; }
+
+.slider-row { display: grid; grid-template-columns: 220px 1fr 60px; align-items: center; gap: 8px; margin: 4px 0; }
+.slider-row label { font-size: 0.85em; color: #ccc; }
+.slider-row output { font-size: 0.8em; color: #9cf; text-align: right; }
+
+.color-block { border: 1px solid #333; border-radius: 4px; padding: 8px; margin: 8px 0; }
+.color-block h4 { margin: 0 0 6px 0; }
+.channel-row { display: grid; grid-template-columns: 50px 1fr 1fr; gap: 8px; align-items: center; margin: 2px 0; }
+.channel-row label { font-size: 0.8em; color: #ccc; }
+.channel-row .pair { display: flex; align-items: center; gap: 6px; }
+.channel-row output { font-size: 0.75em; color: #9cf; min-width: 28px; text-align: right; }
+
+#recordingsList { list-style: none; padding: 0; }
+#recordingsList li { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-family: monospace; font-size: 0.85em; }
+
+details { border: 1px solid #333; border-radius: 4px; padding: 8px 12px; margin: 20px 0; }
+details summary { cursor: pointer; color: #9cf; font-size: 0.95em; }
+details[open] summary { margin-bottom: 8px; }
+details section { margin: 12px 0; }

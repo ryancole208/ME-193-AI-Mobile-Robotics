@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sumo Opponent Tracker - Debug</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Sumo Opponent Tracker - Debug / Tuning</h1>
+
+    <div id="status">connecting...</div>
+
+    <div class="images">
+      <div>
+        <h3>Live view - click a color, then press its button below</h3>
+        <img id="liveImage" alt="waiting for first frame..." />
+      </div>
+      <div>
+        <h3>Mask - what the detector sees <select id="maskChannelSelect"></select></h3>
+        <img id="maskImage" alt="waiting for first frame..." />
+      </div>
+    </div>
+    <p class="legend">
+      <span style="color:#0f0">green outline</span> = chosen group (gray = not confirmed yet) &nbsp;|&nbsp;
+      <span style="color:#f00">red dot</span> = its center &nbsp;|&nbsp;
+      <span style="color:#ff0">yellow line</span> = horizon &nbsp;|&nbsp;
+      <span style="color:#f0f">magenta line</span> = own-robot line &nbsp;|&nbsp;
+      <span style="color:#fa0">orange box</span> = the spot that'll be sampled
+    </p>
+    <p class="legend">
+      Pick a single color in the dropdown above the mask if the "combined" view looks too messy to make sense of -
+      that shows you exactly which one color is lighting up too much.
+    </p>
+
+    <section>
+      <h2>Fast color tuning</h2>
+      <p>
+        Click the spot on the live image above where a color is (the orange box jumps there), then press the
+        matching button. This reads the real pixels and sets a snug range instantly. Clicking the <em>same</em>
+        color somewhere else and pressing its button again <em>widens</em> the range to also cover that spot -
+        so a couple of clicks across light and shadow on a piece works better than one click.
+      </p>
+      <div id="learnButtons"></div>
+      <button id="resetColorsButton">Reset learned colors</button>
+      <div id="learnedColors" class="monospace"></div>
+      <p>
+        <label><input type="checkbox" id="floorFallbackCheckbox" /> Also flag anything that isn't the floor color (off by default - can make the mask messy; only turn on if the named colors above aren't enough)</label>
+      </p>
+    </section>
+
+    <section>
+      <h2>Horizon &amp; own-robot lines</h2>
+      <p>Click where the line should be on the live image above, then press the matching button.</p>
+      <button id="setHorizonButton">Set horizon line here</button>
+      <button id="setOwnRobotButton">Set own-robot line here</button>
+    </section>
+
+    <details>
+      <summary>Advanced settings (most setups won't need these - defaults are already reasonable)</summary>
+      <section>
+        <h2>Cleanup &amp; rejection thresholds</h2>
+        <p>Only the first three (blur, morph open, morph close) change what you see in the mask picture above. The rest only affect whether a shape counts as "a robot" after the mask - they won't visibly change the mask itself.</p>
+        <div id="simpleSliders"></div>
+      </section>
+
+      <section>
+        <h2>Opponent colors (manual fine-tuning)</h2>
+        <p>Usually you won't need these - "Fast color tuning" above sets a good range in one click. Use these only to nudge a range afterward.</p>
+        <div id="colorSliders"></div>
+      </section>
+    </details>
+
+    <section>
+      <h2>Distance calibration</h2>
+      <p>
+        Place a robot (or LEGO stand-in) at a measured distance from the camera, enter that distance below, then
+        click Capture. Repeat at several distances (e.g. 10, 20, 30, 50, 75 cm).
+      </p>
+      <p><strong>Note:</strong> distance_cm is currently computed from NEAR_CM / FAR_CM in python/main.py, not from these points.</p>
+      <input type="number" id="distanceInput" placeholder="distance in cm" min="0" step="1" />
+      <button id="captureDistanceButton">Capture point at this distance</button>
+      <button id="clearDistanceButton">Clear all calibration points</button>
+      <div id="distanceStatus" class="monospace"></div>
+      <div id="distancePoints" class="monospace"></div>
+    </section>
+
+    <section>
+      <h2>Save</h2>
+      <button id="saveConfigButton">Save settings to config.json</button>
+      <span id="saveStatus"></span>
+    </section>
+
+    <section>
+      <h2>Recordings</h2>
+      <button id="recordButton">Record current frame</button>
+      <div id="recordStatus"></div>
+      <ul id="recordingsList"></ul>
+    </section>
+
+    <script src="libs/socket.io.min.js"></script>
+    <script src="libs/arduino.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

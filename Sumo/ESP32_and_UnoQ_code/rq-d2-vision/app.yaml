@@ -1,0 +1,5 @@
+name: RQ-D2 Vision
+description: "Ultrasonic \"eyes\" and sad-song \"voice\" for the RQ-D2 sumo robot: measures the distance to the nearest object in front of the robot with an HC-SR04,"
+ports: []
+bricks: []
+icon: 👁️

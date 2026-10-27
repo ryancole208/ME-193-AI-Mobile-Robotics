@@ -1,0 +1,5 @@
+name: Gait Classifier (wired IMU)
+description: "Test version of the Gait Activity Classifier: an MPU-6050 wired to the UNO Q's I2C header (no Pico W, no Bluetooth). Same two kNN models, gestures and LED-matrix figures."
+ports: []
+bricks: []
+icon: 🔌

@@ -1,0 +1,50 @@
+# One-time setup options. Edit this BEFORE running setup; setup copies what the
+# models need into config.json, and live mode only reads config.json (plus
+# `leg`, to warn if the pod has moved to the other ankle).
+
+# Which ankle the pod is on: right (default) or left.
+# Setup and live use must be on the same leg.
+leg: right
+
+# Model A ("1D") uses exactly one feature: the peak shin-axis acceleration in a
+# window. axis = x | y | z (y = up the shin). use_abs: false -> max(a_y),
+# true -> max(|a_y|).
+model_a:
+  axis: y
+  use_abs: false
+
+# Model B ("Full IMU") keeps the top N features by ANOVA F-score after dropping
+# near-constant ones. null keeps every non-constant feature.
+model_b:
+  top_n: 30
+
+# Seconds of each activity to record during setup (after a 10 s countdown).
+record_s: 120
+countdown_s: 10
+stand_s: 10
+# Seconds dropped from the start and end of each recording before windowing.
+trim_s: 5
+# Taps expected in the gesture check, and how long to wait for them.
+gesture_check_count: 5
+gesture_check_timeout_s: 90
+
+# Held-out recordings for tools/evaluate (RUN_MODE holdout), per activity.
+holdout_record_s: 120
+
+# Cross-validation folds (each recording is cut into this many time blocks).
+cv_folds: 5
+# Cap on stored training windows per class (subsampled evenly per recording).
+max_windows_per_class: 200
+
+# Display
+default_model: A              # A or B, used until you switch with the gesture
+switch_mode: gesture          # gesture | auto_alternate (A 4 s, B 4 s, no input needed)
+unsure_enabled: false         # true: show "?" when the nearest neighbour is unusually far
+
+# Ankle battery (Pico W VSYS). 0 mV from the node means "reading unavailable".
+low_battery_mV: 2200
+battery_empty_mV: 2000        # shown as 0 % on the battery bar
+battery_full_mV: 3000         # shown as 100 %
+
+# Save the raw IMU stream of every live run to logs/ (for replay/evaluate).
+log_raw: true

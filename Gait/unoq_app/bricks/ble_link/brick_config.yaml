@@ -1,0 +1,13 @@
+id: ble_link
+name: BLE Link (GaitNode)
+description: >
+  Connects to the Pico W ankle node ("GaitNode") over Bluetooth Low Energy and
+  streams its notifications to the app. A small relay container talks to the
+  board's BlueZ over D-Bus; the app reads it through a Unix socket.
+variables:
+  - name: GAITNODE_NAME
+    default_value: GaitNode
+    description: BLE advertised name of the ankle node
+  - name: BLE_RELAY_SOCKET
+    default_value: /app/.cache/ble_link/relay.sock
+    description: Unix socket shared by the relay container and the app

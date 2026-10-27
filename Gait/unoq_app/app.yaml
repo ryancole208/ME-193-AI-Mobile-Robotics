@@ -1,0 +1,6 @@
+name: Gait Activity Classifier
+description: "Waist unit: classifies still / walking / running / biking from a BLE ankle IMU (Pico W 'GaitNode') with two kNN models (no neural networks), shown on the LED matrix."
+ports: []
+bricks:
+- ble_link: {}
+icon: 🏃

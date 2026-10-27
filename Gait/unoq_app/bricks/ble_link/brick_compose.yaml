@@ -1,0 +1,40 @@
+services:
+  # Why a second container: the app's main container cannot reach Bluetooth.
+  # Linux only allows Bluetooth sockets in the host network namespace, and the
+  # main container gets no D-Bus socket, so bleak has no BlueZ to talk to.
+  # This relay mounts the host's system D-Bus socket (read-only mount; BlueZ's
+  # own policy already lets the `arduino` user talk to org.bluez) and forwards
+  # GaitNode notifications to the app over a Unix socket in the app folder.
+  #
+  # It reuses the image and the Python venv that App Lab already builds for the
+  # app (bleak comes from bricks/ble_link/requirements.txt, which App Lab
+  # installs into /app/.cache/.venv), so nothing is installed on the board.
+  ble-relay:
+    image: ${DOCKER_REGISTRY_BASE:-ghcr.io/arduino/}app-bricks/python-apps-base:0.12.0
+    user: "1000:1000"
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ${APP_HOME:-.}
+        target: /app
+      - type: bind
+        source: /run/dbus
+        target: /run/dbus
+        read_only: true
+    environment:
+      GAITNODE_NAME: ${GAITNODE_NAME:-GaitNode}
+      BLE_RELAY_SOCKET: ${BLE_RELAY_SOCKET:-/app/.cache/ble_link/relay.sock}
+      PYTHONUNBUFFERED: "1"
+    entrypoint: ["/bin/sh", "-c"]
+    # Wait until the main container has created the venv and installed bleak,
+    # then run the relay.
+    command:
+      - >-
+        echo "ble-relay: waiting for /app/.cache/.venv with bleak";
+        until /app/.cache/.venv/bin/python -c "import bleak" 2>/dev/null; do sleep 2; done;
+        exec /app/.cache/.venv/bin/python /app/bricks/ble_link/relay.py
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"

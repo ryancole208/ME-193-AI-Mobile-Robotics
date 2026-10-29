@@ -1,0 +1,7 @@
+name: Neural-Net Step Counter
+description: Counts steps live with a PyTorch-trained neural network (run in numpy) from an ankle IMU (BLE) and a hip accelerometer, estimates distance, both with 95% intervals, and serves an HTTP API for the laptop.
+ports:
+- 8765
+bricks:
+- ble_link: {}
+icon: 👣

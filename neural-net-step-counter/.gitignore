@@ -1,0 +1,6 @@
+# Pulled sessions and live logs (large, personal recordings)
+data/
+# Training checkpoint (large; model.npz is what gets uploaded)
+models/*.pt
+*.part
+__pycache__/

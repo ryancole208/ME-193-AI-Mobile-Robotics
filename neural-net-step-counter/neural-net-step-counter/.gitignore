@@ -1,0 +1,17 @@
+# Build output, App Lab venv, BLE relay socket
+.cache/
+__pycache__/
+*.pyc
+
+# Created on the device
+config.json
+config.broken-*.json
+config.backup-*.json
+setup_state.json
+state.json
+model.npz
+model.prev.npz
+model.upload.npz
+RUN_MODE
+logs/
+sessions/

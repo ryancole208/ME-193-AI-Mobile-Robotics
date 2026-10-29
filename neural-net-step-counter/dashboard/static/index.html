@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step Counter Live</title>
+<!-- Plain HTML/JS/canvas on purpose: no CDN, so it works with the laptop offline
+     (e.g. on the UNO Q's own hotspot). Data comes from dashboard/server.py. -->
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --fg: #1d2330; --muted: #6b7385; --line: #dde1e8;
+  --accent: #2f6fd6; --right: #2f6fd6; --left: #e07b1a; --ok: #1f9d55; --bad: #d64545; --warn: #c98a00;
+  --v-event: #2f6fd6; --v-model: #8e5bd6; --v-sys: #e07b1a; --grid: #eceef2;
+}
+:root[data-theme="dark"] {
+  --bg: #12151b; --card: #1b2029; --fg: #e6e9ef; --muted: #98a0b0; --line: #2c3340;
+  --accent: #6aa0ff; --right: #6aa0ff; --left: #f3a24a; --ok: #3ccf7d; --bad: #ff6b6b; --warn: #f2c14e;
+  --v-event: #6aa0ff; --v-model: #b48cff; --v-sys: #f3a24a; --grid: #252b36;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b; --card: #1b2029; --fg: #e6e9ef; --muted: #98a0b0; --line: #2c3340;
+    --accent: #6aa0ff; --right: #6aa0ff; --left: #f3a24a; --ok: #3ccf7d; --bad: #ff6b6b; --warn: #f2c14e;
+    --v-event: #6aa0ff; --v-model: #b48cff; --v-sys: #f3a24a; --grid: #252b36;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+header h1 { font-size: 16px; margin: 0; flex: 1; }
+.pill { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: var(--muted); }
+.pill.ok { background: var(--ok); } .pill.bad { background: var(--bad); }
+button, select, input { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; }
+button { cursor: pointer; } button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--bad); }
+#banner { display: none; padding: 10px 16px; background: var(--bad); color: #fff; font-weight: 600; }
+main { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; padding: 12px 16px; max-width: 1400px; margin: 0 auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.card h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.span4 { grid-column: span 4; } .span5 { grid-column: span 5; } .span7 { grid-column: span 7; } .span8 { grid-column: span 8; } .span12 { grid-column: span 12; }
+@media (max-width: 900px) { .span4, .span5, .span7, .span8 { grid-column: span 12; } }
+.big { font-size: 56px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.mid { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dim .big { font-size: 30px; }
+.sub { color: var(--muted); font-variant-numeric: tabular-nums; }
+.headline { display: flex; flex-direction: column; gap: 14px; }
+.errbar { position: relative; height: 18px; margin-top: 6px; }
+.errbar .track { position: absolute; top: 8px; left: 0; right: 0; height: 2px; background: var(--grid); }
+.errbar .ci { position: absolute; top: 4px; height: 10px; background: var(--accent); opacity: .35; border-radius: 3px; }
+.errbar .pt { position: absolute; top: 1px; width: 3px; height: 16px; background: var(--accent); }
+.stack { display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--grid); }
+.stack div { height: 100%; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; min-width: 92px; }
+.chip b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.chip span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.good { color: var(--ok); } .badc { color: var(--bad); } .warnc { color: var(--warn); }
+canvas { width: 100%; display: block; }
+#plot { height: 380px; } #timeline { height: 150px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.row label { color: var(--muted); font-size: 12px; }
+.row input[type=number] { width: 110px; } .row input.wide { flex: 1; min-width: 160px; }
+#msg { min-height: 1.4em; font-size: 12px; color: var(--muted); }
+.pill.demo { background: var(--warn); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; }
+.chain .node { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
+.chain .arrow { color: var(--muted); }
+.hint { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--bg); border-left: 3px solid var(--bad); }
+.hint:empty { display: none; }
+.log { max-height: 200px; overflow-y: auto; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+.log div { padding: 2px 0; border-bottom: 1px solid var(--grid); overflow-wrap: anywhere; }
+.log div:last-child { border-bottom: 0; }
+.log time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+.group { margin-bottom: 10px; }
+.group h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Neural-net step counter</h1>
+  <span id="demo" class="pill demo" style="display:none" title="python stepnet.py dash --demo: simulated data, no UNO Q">DEMO</span>
+  <span id="conn" class="pill">connecting…</span>
+  <select id="units" title="distance units"><option>m</option><option>ft</option><option>km</option><option>mi</option></select>
+  <button id="theme" title="theme">auto</button>
+</header>
+<div id="banner">UNO Q unreachable — retrying</div>
+
+<main>
+  <section class="card span5">
+    <h2>Count</h2>
+    <div class="headline">
+      <div id="stepsBox">
+        <div><span class="big" id="steps">–</span> <span class="sub">steps</span></div>
+        <div class="sub" id="stepsCI">95% interval –</div>
+        <div class="errbar" id="stepsBar"><div class="track"></div><div class="ci"></div><div class="pt"></div></div>
+      </div>
+      <div id="distBox">
+        <div><span class="big" id="dist">–</span> <span class="sub" id="distUnit">m</span></div>
+        <div class="sub" id="distCI">95% interval –</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card span7">
+    <h2>Status</h2>
+    <div class="strip" id="strip"></div>
+    <h2 style="margin-top:14px">Where the uncertainty comes from (variance)</h2>
+    <div class="stack" id="vstack"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--v-event)"></i>event <b id="vEvent"></b></span>
+      <span><i class="sw" style="background:var(--v-model)"></i>model <b id="vModel"></b></span>
+      <span><i class="sw" style="background:var(--v-sys)"></i>systematic <b id="vSys"></b></span>
+    </div>
+  </section>
+
+  <section class="card span12">
+    <h2>Last 10 s &nbsp;<span class="sub" style="text-transform:none;letter-spacing:0">
+      <i class="sw" style="background:var(--right)"></i>right
+      <i class="sw" style="background:var(--left)"></i>left
+      &nbsp; ● NN event &nbsp; ○ baseline event</span></h2>
+    <canvas id="plot"></canvas>
+  </section>
+
+  <section class="card span8">
+    <h2>Steps per 5 s, last 2 min &nbsp;<span class="sub" style="text-transform:none;letter-spacing:0">filled = NN, outline = baseline</span></h2>
+    <canvas id="timeline"></canvas>
+  </section>
+
+  <section class="card span4">
+    <h2>Session</h2>
+    <div class="row">
+      <button class="primary" id="start">Start session</button>
+      <button id="stop">Stop session</button>
+      <span class="sub" id="sessNow"></span>
+    </div>
+    <div class="row">
+      <label>Mode</label>
+      <select id="mode"><option value="live">live</option><option value="record">record</option></select>
+      <label>Display</label>
+      <select id="display"><option value="steps">steps</option><option value="distance">distance</option></select>
+      <button class="danger" id="reset">Reset</button>
+    </div>
+    <h2 style="margin-top:12px">Ground truth</h2>
+    <div class="row"><label>Session</label><input id="tSession" class="wide" placeholder="YYYYMMDD-HHMMSS"></div>
+    <div class="row">
+      <label>True steps</label><input id="tSteps" type="number" min="0" step="1">
+      <label>Distance (<span id="tUnit">m</span>)</label><input id="tDist" type="number" min="0" step="any">
+    </div>
+    <div class="row"><label><input type="checkbox" id="tCalib"> this was a distance calibration walk</label></div>
+    <div class="row"><input id="tNotes" class="wide" placeholder="notes (e.g. normal walk, jog, biking)"><button id="tSave">Save truth</button></div>
+    <h2 style="margin-top:12px">Mark</h2>
+    <div class="row"><input id="markNote" class="wide" placeholder="note for marks.csv"><button id="mark">Mark</button></div>
+    <div id="msg"></div>
+  </section>
+
+  <section class="card span5">
+    <h2>Connection</h2>
+    <div class="chain" id="chain"></div>
+    <div class="strip" id="connStrip"></div>
+    <div class="hint" id="connHint"></div>
+    <h2 style="margin-top:12px">Connection log (newest first)</h2>
+    <div class="log" id="connLog"></div>
+  </section>
+
+  <section class="card span7">
+    <h2>UNO Q diagnostics &nbsp;<span class="sub" id="diagAge" style="text-transform:none;letter-spacing:0"></span></h2>
+    <div id="diag"><span class="sub">waiting for the UNO Q…</span></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const M_PER = { m: 1, ft: 1 / 0.3048, km: 0.001, mi: 1 / 1609.344 };   // units per metre
+const store = {   // localStorage can throw (private windows); it only holds conveniences
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+let S = null;                 // last /local/state
+let H = null;                 // last /local/history
+let serverDown = false;
+let unitsChosen = store.get("units");
+let lastSession = "";
+
+// ------------------------------------------------------------------ theme
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();   // before applyTheme, which draws
+const themes = ["auto", "light", "dark"];
+function applyTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  $("theme").textContent = t;
+  store.set("theme", t);
+  draw();
+}
+$("theme").onclick = () => applyTheme(themes[(themes.indexOf($("theme").textContent) + 1) % 3]);
+
+// ------------------------------------------------------------------ polling
+async function poll() {
+  try {
+    const r = await fetch("/local/state", { cache: "no-store" });
+    S = await r.json();
+    serverDown = false;
+  } catch (e) { serverDown = true; }
+  render();
+}
+async function pollHistory() {
+  try { H = await (await fetch("/local/history?minutes=2", { cache: "no-store" })).json(); } catch (e) {}
+  drawTimeline();
+}
+setInterval(poll, 400);
+setInterval(pollHistory, 2000);
+poll(); pollHistory();
+window.addEventListener("resize", draw);
+
+// ------------------------------------------------------------------ helpers
+const fmt = (x, d = 0) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toFixed(d);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// The UNO Q may report "imperial"/"metric" instead of a unit.
+const UNIT_ALIAS = { imperial: "ft", metric: "m" };
+function unitName(u) { return u && (M_PER[u] ? u : UNIT_ALIAS[u]); }
+function units() { return unitName(unitsChosen) || unitName(S && S.status && S.status.units) || unitName(S && S.units_pref) || "m"; }
+$("units").onchange = (e) => { unitsChosen = e.target.value; store.set("units", unitsChosen); render(); };
+
+function chip(label, value, cls = "") { return `<div class="chip"><span>${label}</span><b class="${cls}">${value}</b></div>`; }
+
+// ------------------------------------------------------------------ render
+function render() {
+  const st = S && S.status;
+  const ok = S && S.connected && !serverDown;
+  $("conn").className = "pill " + (ok ? "ok" : "bad");
+  $("conn").textContent = serverDown ? "dashboard server down" : ok ? "connected" : "UNO Q unreachable";
+  const banner = $("banner");
+  if (serverDown) {
+    banner.style.display = "block";
+    banner.textContent = "Dashboard server not responding — is `python stepnet.py dash` still running?";
+  } else if (S && !S.connected) {
+    banner.style.display = "block";
+    banner.textContent = `UNO Q unreachable — retrying (${S.unoq_url})` + (S.conn && S.conn.hint ? ` · ${S.conn.hint}` : "") +
+      (S.age_s != null ? ` · last contact ${fmt(S.age_s, 0)} s ago` : "");
+  } else banner.style.display = "none";
+  $("demo").style.display = S && S.net_mode === "demo" ? "" : "none";
+  renderConnection(ok);
+  renderDiag();
+
+  const u = units();
+  $("units").value = u; $("distUnit").textContent = u; $("tUnit").textContent = u;
+  if (!st) { draw(); return; }
+
+  // Headline: count with 95% interval, as text and as an error bar.
+  const n = st.steps, sig = st.steps_sigma || 0;
+  const ci = st.steps_ci || [n - 1.96 * sig, n + 1.96 * sig];
+  $("steps").textContent = fmt(n);
+  $("stepsCI").textContent = `95% interval ${fmt(ci[0])} – ${fmt(ci[1])}   ·   σ = ${fmt(sig, 1)}`;
+  const half = Math.max(4 * sig, 5), lo = n - half, span = 2 * half;
+  const bar = $("stepsBar");
+  bar.querySelector(".ci").style.left = `${100 * (ci[0] - lo) / span}%`;
+  bar.querySelector(".ci").style.width = `${100 * (ci[1] - ci[0]) / span}%`;
+  bar.querySelector(".pt").style.left = `calc(${100 * (n - lo) / span}% - 1px)`;
+
+  const f = M_PER[u] || 1, d = st.dist_m, ds = st.dist_sigma_m || 0;
+  $("dist").textContent = fmt(d * f, u === "km" || u === "mi" ? 3 : 1);
+  $("distCI").textContent = d == null ? "95% interval –" :
+    `95% interval ${fmt(Math.max(0, d - 1.96 * ds) * f, 2)} – ${fmt((d + 1.96 * ds) * f, 2)} ${u}   ·   σ = ${fmt(ds * f, 2)} ${u}`;
+  // The UNO Q's own display setting decides which number is the headline.
+  const showDist = st.display === "distance";
+  $("stepsBox").className = showDist ? "dim" : "";
+  $("distBox").className = showDist ? "" : "dim";
+
+  // Variance split
+  const vs = st.var_split || {}, ve = vs.event || 0, vm = vs.model || 0, vy = vs.systematic || 0, vt = ve + vm + vy;
+  $("vstack").innerHTML = vt > 0 ?
+    `<div style="width:${100 * ve / vt}%;background:var(--v-event)"></div><div style="width:${100 * vm / vt}%;background:var(--v-model)"></div><div style="width:${100 * vy / vt}%;background:var(--v-sys)"></div>` : "";
+  $("vEvent").textContent = vt ? `${fmt(100 * ve / vt)}%` : "–";
+  $("vModel").textContent = vt ? `${fmt(100 * vm / vt)}%` : "–";
+  $("vSys").textContent = vt ? `${fmt(100 * vy / vt)}%` : "–";
+
+  // Status strip
+  const link = st.ankle_link, batt = st.ankle_batt_mv;
+  $("strip").innerHTML =
+    chip("detector", st.using === "nn" ? "NN" : "baseline", st.using === "nn" ? "good" : "warnc") +
+    chip("model", st.model_version || "none") +
+    chip("cadence", `${fmt(st.cadence_spm)} spm`) +
+    chip("ankle link", link || "–", link === "ok" ? "good" : link === "lost" ? "badc" : "warnc") +
+    chip("ankle batt", !batt ? "unavailable" : `${fmt(batt)} mV`) +    // 0 means "no reading", not flat
+    chip("hip", st.hip_ok ? "OK" : "missing", st.hip_ok ? "good" : "badc") +
+    chip("inference", `${fmt(st.infer_ms, 1)} ms`) +
+    chip("mode", st.mode || "–", st.mode === "record" ? "warnc" : "") +
+    chip("last update", S.age_s == null ? "–" : `${fmt(S.age_s, 1)} s`, S.age_s > 2 ? "badc" : "");
+
+  if (st.session_id) lastSession = st.session_id;
+  $("sessNow").textContent = st.session_id ? `recording ${st.session_id}` : "no session running";
+  if (!$("tSession").value && lastSession) $("tSession").value = lastSession;
+  if (document.activeElement !== $("mode")) $("mode").value = st.mode || "live";
+  if (document.activeElement !== $("display")) $("display").value = st.display || "steps";
+  draw();
+}
+
+// ------------------------------------------------------------------ connection + diagnostics
+const KIND_LABEL = { ok: "connected", starting: "starting", refused: "refused", timeout: "timed out",
+  dns: "name not found", token: "wrong token", network: "no route", error: "error" };
+const clock = (sec) => new Date(sec * 1000).toLocaleTimeString();
+const dur = (s) => s == null ? "–" : s < 90 ? `${fmt(s)} s` : s < 5400 ? `${fmt(s / 60, 1)} min` : `${fmt(s / 3600, 1)} h`;
+
+function renderConnection(ok) {
+  const c = (S && S.conn) || {};
+  const node = (label, good, detail = "") =>
+    `<span class="node ${good ? "good" : "badc"}">${good ? "✓" : "✗"} ${esc(label)}${detail ? ` <span class="sub">${esc(detail)}</span>` : ""}</span>`;
+  $("chain").innerHTML = node("this page", true) + `<span class="arrow">→</span>` +
+    node("laptop dashboard", !serverDown, serverDown ? "not running" : "") + `<span class="arrow">→</span>` +
+    node(S && S.net_mode === "demo" ? "simulated UNO Q" : "UNO Q", ok, ok ? "" : serverDown ? "unknown" : KIND_LABEL[c.kind] || c.kind || "");
+  if (serverDown) {
+    $("connStrip").innerHTML = "";
+    $("connHint").textContent = "This page can't reach the laptop dashboard. Start it again with `python stepnet.py dash` (with my_env active); the page reconnects by itself.";
+    return;
+  }
+  if (!S) return;
+  $("connStrip").innerHTML =
+    chip("UNO Q address", esc(S.unoq_url)) +
+    chip("round trip", c.rtt_ms == null ? "–" : `${fmt(c.rtt_ms)} ms`, c.rtt_ms > 500 ? "warnc" : "") +
+    chip("last contact", S.age_s == null ? "never" : `${fmt(S.age_s, 1)} s ago`, ok ? "good" : "badc") +
+    chip("failed polls in a row", fmt(c.fails), c.fails ? "badc" : "") +
+    chip("app uptime", dur(c.uptime_s)) +
+    chip("app restarts seen", fmt(c.restarts), c.restarts ? "warnc" : "") +
+    chip("dashboard up", dur(c.dash_up_s));
+  $("connHint").textContent = ok ? "" : `${c.hint || ""}${S.error ? `  Details: ${S.error}` : ""}`;
+  $("connLog").innerHTML = (c.log || []).map((e) =>
+    `<div><time>${clock(e.at)}</time><b class="${e.kind === "connected" ? "good" : e.kind === "restart" || e.kind === "command" ? "warnc" : "badc"}">${esc(e.kind)}</b> ${esc(e.text)}</div>`
+  ).join("") || `<span class="sub">nothing yet</span>`;
+}
+
+function renderDiag() {
+  if (!S) return;
+  const d = S.diag;
+  $("diagAge").textContent = S.diag_age_s == null ? "" : `updated ${fmt(S.diag_age_s, 0)} s ago` + (S.diag_age_s > 5 ? " (stale: the UNO Q isn't answering)" : "");
+  if (!d) { $("diag").innerHTML = `<span class="sub">${esc(S.diag_error || "waiting for the UNO Q…")}</span>`; return; }
+  const cls = (bad, warn) => bad ? "badc" : warn ? "warnc" : "good";
+  const a = d.ankle || {}, h = d.hip || {}, sy = d.sync || {}, p = d.present_10s || {}, nn = d.nn || {};
+  const sync = (name, s) => !s ? "" : chip(`${name} sync`, s.fitted ? `${fmt(s.residual_ms, 1)} ms` : "not fitted",
+    cls(!s.fitted, s.residual_ms > 20)) + chip(`${name} clock drift`, `${fmt(s.ppm)} ppm`);
+  const group = (title, chips) => `<div class="group"><h3>${title}</h3><div class="strip">${chips}</div></div>`;
+  $("diag").innerHTML =
+    group("Ankle pod (BLE)",
+      chip("state", esc(a.state ?? "–"), cls(a.state === "lost", a.state !== "ok")) +
+      chip("relay", esc(a.relay ?? "–")) +
+      chip("rate", `${fmt(a.rate_hz, 1)} Hz`, cls(a.rate_hz < 50, a.rate_hz < 90)) +
+      chip("packet loss", `${fmt(a.loss_pct, 1)}%`, cls(a.loss_pct > 20, a.loss_pct > 5)) +
+      chip("gaps seq/src/resync", `${fmt(a.seq_gaps)}/${fmt(a.source_gaps)}/${fmt(a.resyncs)}`) +
+      chip("packets", fmt(a.packets)) + chip("MTU", fmt(a.mtu)) +
+      chip("battery", !a.battery_mv ? "unavailable" : `${fmt(a.battery_mv)} mV`) +
+      chip("bad packets", fmt(a.bad_packets), a.bad_packets ? "warnc" : "")) +
+    group("Hip sensor (GY-61)",
+      chip("state", h.ok ? "OK" : "bad", cls(!h.ok, false)) +
+      chip("reason", esc(h.reason ?? "–")) +
+      chip("rate", `${fmt(h.rate_hz, 1)} Hz`, cls(h.rate_hz < 50, h.rate_hz < 90)) +
+      chip("|a| still", h.amag_g == null ? "–" : `${fmt(h.amag_g, 2)} g`, h.amag_g == null ? "" : cls(Math.abs(h.amag_g - 1) > 0.25, Math.abs(h.amag_g - 1) > 0.1)) +
+      chip("clipped", `${fmt(h.clipped_pct, 1)}%`, cls(h.clipped_pct > 5, h.clipped_pct > 1)) +
+      chip("late / skipped", `${fmt(h.late)}/${fmt(h.skipped)}`) +
+      chip("ADC errors", fmt(h.adc_errors), h.adc_errors ? "warnc" : "") +
+      chip("calibration", esc(h.cal ?? "none"), h.cal ? "" : "warnc")) +
+    group("Clock sync and data on the grid",
+      sync("ankle", sy.ankle) + sync("hip", sy.hip) +
+      chip("ankle present (10 s)", p.ankle == null ? "–" : `${fmt(100 * p.ankle)}%`, cls(p.ankle < 0.5, p.ankle < 0.95)) +
+      chip("hip present (10 s)", p.hip == null ? "–" : `${fmt(100 * p.hip)}%`, cls(p.hip < 0.5, p.hip < 0.95)) +
+      chip("grid rows", fmt(d.grid_rows))) +
+    group("Network",
+      chip("model", esc(nn.model || "none (baseline)"), nn.model ? "good" : "warnc") +
+      chip("inference last / max", `${fmt(nn.last_ms, 1)} / ${fmt(nn.max_ms, 1)} ms`, nn.max_ms > 100 ? "warnc" : "") +
+      chip("p right / left", `${fmt(nn.p_right, 2)} / ${fmt(nn.p_left, 2)}`)) +
+    group("Recent gestures",
+      (d.gestures || []).length ? (d.gestures || []).slice(-5).map((g) => chip("", esc(typeof g === "string" ? g : JSON.stringify(g)))).join("") : `<span class="sub">none</span>`);
+}
+
+// ------------------------------------------------------------------ canvas
+function fit(cv) {
+  const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+  const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, r.width, r.height);
+  return { ctx, w: r.width, h: r.height };
+}
+
+function draw() { drawPlot(); drawTimeline(); }
+
+function drawPlot() {
+  const { ctx, w, h } = fit($("plot"));
+  const s = S && S.stream;
+  const t1 = S ? S.now_t : 0, t0 = t1 - 10;
+  const L = 48, R = 8, gap = 12;
+  const panels = [
+    { keys: ["ankle_gz"], label: "ankle gz (°/s)", colors: [css("--fg")] },
+    { keys: ["hip_vert"], label: "hip vert (g)", colors: [css("--muted")] },
+    { keys: ["p_right", "p_left"], label: "p (R / L)", colors: [css("--right"), css("--left")], range: [0, 1.05] },
+  ];
+  const ph = (h - gap * (panels.length - 1) - 14) / panels.length;
+  const X = (t) => L + (w - L - R) * (t - t0) / 10;
+  ctx.font = "11px system-ui, sans-serif";
+  panels.forEach((p, k) => {
+    const top = k * (ph + gap);
+    let lo = Infinity, hi = -Infinity;
+    if (p.range) [lo, hi] = p.range;
+    else if (s) for (const key of p.keys) for (let i = 0; i < s.t.length; i++) {
+      const v = s[key][i]; if (v == null || s.t[i] < t0) continue; lo = Math.min(lo, v); hi = Math.max(hi, v);
+    }
+    if (!isFinite(lo)) { lo = -1; hi = 1; }
+    if (hi - lo < 1e-6) { lo -= 1; hi += 1; }
+    const pad = p.range ? 0 : 0.08 * (hi - lo); lo -= pad; hi += pad;
+    const Y = (v) => top + ph - ph * (v - lo) / (hi - lo);
+    p.Y = Y;
+    // frame, zero line, label
+    ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+    ctx.strokeRect(L, top, w - L - R, ph);
+    if (lo < 0 && hi > 0) { ctx.beginPath(); ctx.moveTo(L, Y(0)); ctx.lineTo(w - R, Y(0)); ctx.stroke(); }
+    ctx.fillStyle = css("--muted");
+    ctx.fillText(p.label, L + 6, top + 12);
+    ctx.textAlign = "right";
+    ctx.fillText(fmt(hi, p.range ? 1 : (hi - lo > 10 ? 0 : 2)), L - 4, top + 10);
+    ctx.fillText(fmt(lo, p.range ? 1 : (hi - lo > 10 ? 0 : 2)), L - 4, top + ph);
+    ctx.textAlign = "left";
+    if (!s) return;
+    p.keys.forEach((key, j) => {
+      ctx.strokeStyle = p.colors[j]; ctx.lineWidth = 1.4; ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i < s.t.length; i++) {
+        const v = s[key][i];
+        if (v == null || s.t[i] < t0) { pen = false; continue; }
+        if (!pen) { ctx.moveTo(X(s.t[i]), Y(v)); pen = true; } else ctx.lineTo(X(s.t[i]), Y(v));
+      }
+      ctx.stroke();
+    });
+  });
+  // committed events on the probability panel: NN filled dots, baseline hollow rings
+  const pp = panels[2];
+  for (const e of (S && S.events) || []) {
+    if (e.deleted || e.t < t0 || e.t > t1 + 0.5) continue;
+    const col = e.foot === "L" ? css("--left") : css("--right");
+    const x = X(e.t), y = pp.Y(Math.min(1, Math.max(0, e.conf ?? 1)));
+    ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 2 * Math.PI);
+    if (e.src === "nn") { ctx.fillStyle = col; ctx.fill(); }
+    else { ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.stroke(); }
+    // faint marker through the signal panels so the strike lines up with gz / hip
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.25; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 2 * (ph + gap) - gap); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  // x axis
+  ctx.fillStyle = css("--muted");
+  for (let k = 0; k <= 10; k += 2) { ctx.textAlign = "center"; ctx.fillText(`${k - 10} s`, X(t0 + k), h - 2); }
+  ctx.textAlign = "left";
+}
+
+function drawTimeline() {
+  const { ctx, w, h } = fit($("timeline"));
+  if (!H || !H.nn) return;
+  const n = H.nn.length, L = 30, B = 16, R = 6;
+  const maxv = Math.max(4, ...H.nn, ...H.baseline);
+  const bw = (w - L - R) / n;
+  const Y = (v) => (h - B) - (h - B - 6) * v / maxv;
+  ctx.strokeStyle = css("--grid"); ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  for (const v of [0, Math.round(maxv / 2), maxv]) {
+    ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(w - R, Y(v)); ctx.stroke();
+    ctx.textAlign = "right"; ctx.fillText(v, L - 4, Y(v) + 4);
+  }
+  for (let i = 0; i < n; i++) {
+    const x = L + i * bw;
+    ctx.fillStyle = css("--accent");
+    ctx.fillRect(x + 1, Y(H.nn[i]), bw / 2 - 1, (h - B) - Y(H.nn[i]));
+    ctx.strokeStyle = css("--left"); ctx.lineWidth = 1.2;
+    if (H.baseline[i]) ctx.strokeRect(x + bw / 2 + 0.5, Y(H.baseline[i]), bw / 2 - 2, (h - B) - Y(H.baseline[i]));
+  }
+  ctx.fillStyle = css("--muted"); ctx.textAlign = "center";
+  for (const sec of [-120, -90, -60, -30, 0]) ctx.fillText(`${sec} s`, L + (w - L - R) * (sec + 120) / 120, h - 2);
+  ctx.textAlign = "left";
+}
+
+// ------------------------------------------------------------------ commands
+function say(text, bad = false) { $("msg").textContent = text; $("msg").style.color = bad ? css("--bad") : css("--muted"); }
+async function cmd(path, body = {}) {
+  try {
+    const r = await fetch("/local/cmd/" + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok || j.ok === false) { say(`${path}: ${j.error || r.status}`, true); return null; }
+    say(`${path}: ${JSON.stringify(j)}`);
+    return j;
+  } catch (e) { say(`${path}: ${e}`, true); return null; }
+}
+$("start").onclick = async () => {
+  const j = await cmd("session/start");
+  if (j && j.session_id) { lastSession = j.session_id; $("tSession").value = j.session_id; }
+};
+$("stop").onclick = () => cmd("session/stop");
+$("mode").onchange = (e) => cmd("mode", { mode: e.target.value });
+$("display").onchange = (e) => cmd("display", { show: e.target.value });
+$("reset").onclick = () => { if (confirm("Reset the live count on the UNO Q?")) cmd("reset"); };
+$("tSave").onclick = () => {
+  const sid = $("tSession").value.trim(), steps = parseInt($("tSteps").value, 10);
+  if (!sid || Number.isNaN(steps) || steps < 0) { say("enter a session id and a whole number of steps", true); return; }
+  const dv = parseFloat($("tDist").value);
+  // The contract stores distance in inches; convert from the units shown on the page.
+  const distIn = Number.isNaN(dv) ? null : (dv / (M_PER[units()] || 1)) / 0.0254;
+  if ($("tCalib").checked && distIn === null) { say("a calibration walk needs the measured distance", true); return; }
+  cmd("session/truth", { session_id: sid, steps, distance_in: distIn, is_calib_walk: $("tCalib").checked, notes: $("tNotes").value });
+};
+$("mark").onclick = async () => {
+  try {
+    await fetch("/local/mark", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: $("markNote").value }) });
+    say(`marked: ${$("markNote").value || "(no note)"}`); $("markNote").value = "";
+  } catch (e) { say(`mark failed: ${e}`, true); }
+};
+// Last: applyTheme draws, and drawing needs every helper above to exist.
+applyTheme(store.get("theme") || "auto");
+</script>
+</body>
+</html>

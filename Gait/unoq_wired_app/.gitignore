@@ -4,7 +4,6 @@ __pycache__/
 data/
 logs/
 reports/
-config_wired.json
 config_wired.*.json
 config_wired.tmp
 state.json

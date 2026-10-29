@@ -1,0 +1,30 @@
+# Laptop-side settings for stepnet.py and the dashboard.
+
+# Where the UNO Q's HTTP API listens (net.port on the UNO Q, default 8765).
+unoq_url: http://10.247.137.33:8765
+# Must equal net.token on the UNO Q. The STEPNET_TOKEN environment variable overrides this.
+token: RQ-D2
+
+# Distance display units on the dashboard: m | ft | km | mi
+units: ft
+# Default step length when no calibration walk exists: 115 in measured over 4 steps.
+L0_m: 0.7303
+
+# poll: the dashboard polls the UNO Q (normal).
+# push: the UNO Q POSTs to http://<laptop>:8080/ingest (use when the laptop can't reach the UNO Q).
+net_mode: poll
+# Leave empty for the default: 127.0.0.1 in poll mode, 0.0.0.0 in push mode.
+dash_host:
+dash_port: 8080
+
+timeouts:
+  request_s: 3.0
+  retries: 2
+
+# Relative paths are relative to this folder.
+paths:
+  data: data
+  sessions: data/sessions
+  live_logs: data/live_logs
+  models: models
+  reports: reports

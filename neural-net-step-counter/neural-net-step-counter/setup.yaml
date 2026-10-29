@@ -1,0 +1,34 @@
+# User settings for the Neural-Net Step Counter. Edit, then restart the app.
+# (config.json is written by the one-time setup; model.npz comes from the laptop.)
+
+# Which ankle the Pico W pod is on. Left-leg data is mirrored into the
+# right-leg frame, so one network serves both legs.
+leg: right
+
+# live   = count and display (default)
+# record = the same, plus every session is saved to sessions/ for training
+#          (the matrix shows "REC" briefly every 10 s). Also settable over the API.
+mode: live
+
+# imperial: ft below 1000 ft, then miles with 2 decimals.  metric: m, then km.
+units: imperial
+
+# HTTP API for the laptop. port must match `ports:` in app.yaml.
+# CHANGE the token: every request must send it in the X-Token header.
+# laptop_url is only used by net.mode: push (not needed: App Lab can publish the port).
+net: {mode: pull, port: 8765, token: "change-me", laptop_url: "http://192.168.1.50:8080"}
+
+# Measured walks used for the default step length L0 = total distance / total steps.
+# Hallway measurement: toes together at 0, leading toe at 115 in after 4 steps
+# -> 28.75 in = 0.7303 m per step.
+calib_walks:
+  - {steps: 4, distance_in: 115}
+
+# Tap-gesture thresholds. gesture_debug: true logs the reason for every
+# rejected tap train. These match what was actually validated as reliable
+# (not too strict to register, not so loose that walking/running triggers it)
+# on the Gait Activity Classifier apps after extensive on-device testing.
+gestures: {tap_g: 1.5, max_tap_ms: 250, gap_min_ms: 80, gap_max_ms: 500, still_noise_mult: 4, gesture_debug: false}
+
+# Save the raw ankle/hip packets in each recorded session (raw_ankle.bin, raw_hip.bin).
+log_raw: true

@@ -102,22 +102,12 @@ class Session:
 
     @property
     def category(self):
-        """walk / run / negative, used to stratify the held-out split.
+        """walk / negative, used to stratify the held-out split.
 
-        Negatives are sessions with a true count of 0. Runs are recognised from the
-        notes ("run", "jog") or, failing that, from cadence: above ~140 steps/min
-        (ignoring the 10 s of standing in the protocol) is almost certainly running.
+        Negatives are sessions with a true count of 0. Walking only: running is out
+        of scope, so there is no run category.
         """
-        n = self.true_steps
-        if n == 0:
-            return "negative"
-        notes = ((self.truth or {}).get("notes") or "").lower()
-        if "run" in notes or "jog" in notes:
-            return "run"
-        active_min = max(self.duration_s - 10.0, 1.0) / 60.0
-        if n is not None and n / active_min > 140:
-            return "run"
-        return "walk"
+        return "negative" if self.true_steps == 0 else "walk"
 
     def label_idx(self):
         """(right_idx, left_idx) labelled strikes as int sample indices."""
@@ -146,7 +136,16 @@ def list_sessions(sessions_dir):
     d = Path(sessions_dir)
     if not d.exists():
         return []
-    return [Session(p) for p in sorted(d.iterdir()) if (p / "fused.npy").exists()]
+    out = []
+    for p in sorted(d.iterdir()):
+        if not (p / "fused.npy").exists():
+            continue
+        try:
+            out.append(Session(p))
+        except (ValueError, OSError, EOFError) as e:
+            # e.g. a fused.npy that is all zeros because the UNO Q stopped before writing it
+            print(f"  {p.name}: unreadable fused.npy, skipped ({type(e).__name__})")
+    return out
 
 
 # ---------------------------------------------------------------- normalisation

@@ -38,7 +38,8 @@ Live view: `python stepnet.py dash`, then open http://localhost:8080.
 | `pull [--no-raw]` | Download new sessions. Sessions already pulled only get `meta.json` refreshed, so a truth entered later still arrives. |
 | `truth <id> <steps> [--distance-in X] [--calib-walk] [--notes "..."]` | Send the ground truth to the UNO Q and update the local `meta.json`. |
 | `label [--include-review]` | Count-constrained labelling (see below). |
-| `train [--include-review] [--epochs 30] [--steps 50] [--seed 0]` | Train, calibrate and write the reports. |
+| `train [--include-review] [--epochs 30] [--steps 50] [--seed 0] [--width 32]` | Train, calibrate and write the reports. `--width` other than 32 is a laptop-only experiment: `export` refuses it, because the UNO Q only takes width 32. |
+| `recalibrate` | Refit κ and r on the saved model's held-out sessions, without retraining, then export. Keeps the old files as `*.before-recal.*` and adds `-ml` to the version. |
 | `export` | Write `models/model.npz` after the numpy vs PyTorch check. |
 | `upload [--file X.npz]` | POST the model to `/api/model`. |
 | `dash` | Run the dashboard on port 8080. |
@@ -46,26 +47,25 @@ Live view: `python stepnet.py dash`, then open http://localhost:8080.
 
 ## How it works
 
-**Labels from counts.** Hand-labelling strike times isn't practical, but tallying steps while walking is. `label` runs the baseline detector over a grid of its two thresholds (`gz_thr` 60–200 °/s, `hip_prom` 0.05–0.40 g). It keeps the setting whose right + left total is closest to your tally. If the best setting is still more than 2% (or 3 steps) off, the session is marked `needs_review` and left out of training. Sessions with a true count of 0 are pure negatives: the network learns that biking and fidgeting are not steps.
+**Labels from counts.** Hand-labelling strike times isn't practical, but tallying steps while walking is. `label` runs the baseline detector over a grid of its two thresholds (`gz_thr` 60–400 °/s, `hip_prom` 0.05–0.40 g). It keeps the setting whose right + left total is closest to your tally. If the best setting is still more than 2% (or 3 steps) off, the session is marked `needs_review` and left out of training. Sessions with a true count of 0 are pure negatives: the network learns that biking and fidgeting are not steps.
 
 **Network.** StepTCN is a 1-D dilated convolutional network with dilations 1, 2, 4, 8 and 16. It has about 22,600 parameters and sees 1.25 s of context. It outputs `p_right` and `p_left` for every sample. A step is a local maximum ≥ `thr`, at least 0.30 s after the previous step of the same foot. `model.py` is the reference implementation, and `stepnet_np.py` is the numpy copy that matches the UNO Q.
 
 **Honest evaluation.** The data is split **by session**, so no walk contributes windows to both training and testing. Each of the 5 ensemble members trains on a bootstrap resample of the training sessions. Augmentation covers mounting angle, gain, noise, clock skew between hip and ankle, a dropped sensor and cadence.
 
-**Uncertainty.** σ_N² = κ²·(Σc(1−c) + member variance) + (r·N)². This adds three parts: the uncertainty of each detected event, the disagreement between ensemble members, and an error that grows with the count. κ is the smallest inflation that makes 95% of the held-out sessions fall inside the 95% interval. With only a handful of held-out sessions this is approximate, and the report says so.
+**Uncertainty.** σ_N² = κ²·(Σc(1−c) + member variance) + (r·N)². This adds three parts: the uncertainty of each detected event, the disagreement between ensemble members, and an error that grows with the count. κ and r are fitted together by maximum likelihood on the held-out count errors. On leave-one-out this covered as many held-out counts as fitting r as the RMS relative error and κ for 95% coverage, with intervals about half as wide. With only a handful of held-out sessions this is approximate, and the report says so.
 
 **Distance.** Without calibration walks, distance = steps × `L0_m` (0.7303 m). With calibration walks, each step's length follows Weinberg: K·(hip bounce)^¼, with K fitted on those walks.
 
 ## Data-collection protocol
 
-For every session, stand still for 5 s, do the activity, then stand still for 5 s. Count every footfall of **both** feet with a phone tally-counter app. Enter the count on the dashboard or with `truth`. Put the activity in the notes ("run" or "jog" for running), because the held-out split is stratified on it.
+For every session, stand still for 5 s, do the activity, then stand still for 5 s. Count every footfall of **both** feet with a phone tally-counter app. Enter the count on the dashboard or with `truth`. This counter is for walking only; don't record running.
 
 | Session | Repeats | About |
 |---|---|---|
 | Normal walk, with turns | 3 | 200 steps |
 | Slow walk | 2 | 100 steps |
 | Fast walk | 2 | 150 steps |
-| Jog/run | 2 | 150 steps |
 | Stairs up + down (optional) | 1 | count all |
 | Walk–stop–walk, turning in place | 2 | 100 steps |
 | Negatives (count 0): standing with fidgeting 2 min, sitting with leg movement 2 min, biking 3 min, tap gestures 1 min | 1 each | — |

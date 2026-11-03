@@ -1,6 +1,6 @@
 """Live dashboard server (brief section 5.1).
 
-    UNO Q  <--poll every 0.5 s / 1 s--  this server  <--every 0.4 s--  browser page
+    UNO Q  <--poll every 0.5 s--  this server  <--every 0.25 s--  browser page
 
 The browser never talks to the UNO Q directly: this server polls it, keeps the
 last few minutes in memory, logs everything to data/live_logs/<date>/, and
@@ -38,7 +38,7 @@ sys.path.insert(0, str(HERE.parent))
 from unoq import UnoQError, cfg_client  # noqa: E402
 
 STATUS_PERIOD = 0.5
-FAST_PERIOD = 1.0
+FAST_PERIOD = 0.5            # the UNO Q only republishes its stream every 0.5 s (STEP_S)
 DIAG_PERIOD = 2.0
 CONN_LOG_KEEP = 60
 STREAM_KEEP_S = 12.0          # page shows 10 s; keep a little extra
@@ -204,10 +204,12 @@ class Hub:
         if not ts:
             return
         with self.lock:
-            if ts[-1] < self.stream_t - 5:      # the UNO Q restarted (its clock went backwards)
+            if ts[-1] < self.stream_t:          # the UNO Q rebooted: its monotonic clock went backwards
                 for q in self.stream.values():
                     q.clear()
                 self.stream_t = 0.0
+                # Events on the old clock would pin the plot and history to the old time (all already logged).
+                self.events = {i: e for i, e in self.events.items() if e.get("t") is None or e["t"] <= ts[-1] + 1}
             for i, t in enumerate(ts):
                 if t <= self.stream_t:
                     continue
@@ -246,8 +248,13 @@ class Hub:
             if now >= next_fast and self.connected:
                 next_fast = now + FAST_PERIOD
                 try:
+                    s = self.client.stream(self.stream_t)
+                    if not s.get("t") and self.stream_t:
+                        # Nothing newer than stream_t: either no new data, or the UNO Q rebooted and its
+                        # clock is behind ours, which `since` alone would hide until it caught up.
+                        s = self.client.stream(-1)
+                    self.take_stream(s)          # before events, so a reboot reset can't drop new ones
                     self.take_events(self.client.events(self.last_event_id))
-                    self.take_stream(self.client.stream(self.stream_t))
                 except Exception as e:
                     self.take_error(e)
             if now >= next_diag and self.connected:
@@ -354,7 +361,7 @@ def create_app(cfg, demo=False):
 
 
 def run(cfg, demo=False, browser=True):
-    logging.getLogger("werkzeug").setLevel(logging.WARNING)   # don't print every 0.4 s page poll
+    logging.getLogger("werkzeug").setLevel(logging.WARNING)   # don't print every 0.25 s page poll
     app = create_app(cfg, demo)
     hub = app.hub
     if not hub.push:

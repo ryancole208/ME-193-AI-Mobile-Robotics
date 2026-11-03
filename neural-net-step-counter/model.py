@@ -18,19 +18,20 @@ import torch
 import torch.nn as nn
 
 N_IN = 12
-WIDTH = 32
+WIDTH = 32          # the only width the UNO Q accepts (contract 8.4); others are laptop experiments
 KERNEL = 5
 DILATIONS = (2, 4, 8, 16)
 
 
 class StepTCN(nn.Module):
-    def __init__(self, dropout=0.1):
+    def __init__(self, dropout=0.1, width=WIDTH):
         super().__init__()
-        self.c0 = nn.Conv1d(N_IN, WIDTH, KERNEL, padding=KERNEL // 2)
+        self.width = width
+        self.c0 = nn.Conv1d(N_IN, width, KERNEL, padding=KERNEL // 2)
         self.res = nn.ModuleList(
-            nn.Conv1d(WIDTH, WIDTH, KERNEL, dilation=d, padding=d * (KERNEL // 2)) for d in DILATIONS
+            nn.Conv1d(width, width, KERNEL, dilation=d, padding=d * (KERNEL // 2)) for d in DILATIONS
         )
-        self.out = nn.Conv1d(WIDTH, 2, 1)
+        self.out = nn.Conv1d(width, 2, 1)
         self.drop = nn.Dropout(dropout)
 
     def forward(self, x):

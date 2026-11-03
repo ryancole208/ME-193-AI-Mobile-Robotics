@@ -2,7 +2,7 @@
 
 Pipeline (brief section 4):
   1. Split labelled sessions into train / held-out BY SESSION (stratified by
-     walk / run / negative). Windows from one session never land on both sides,
+     walk / negative). Windows from one session never land on both sides,
      otherwise the held-out score would just measure memorisation of that walk.
   2. Train 5 members, each on a bootstrap resample of the training sessions with
      its own seed. Their disagreement is the "model" part of the uncertainty.
@@ -71,7 +71,7 @@ def split_sessions(sessions, frac=HELDOUT_FRAC, seed=0):
 
 # ---------------------------------------------------------------- training
 
-def train_member(i, train_sessions, Xh, Yh, mean, std, seed, max_epochs, steps_per_epoch):
+def train_member(i, train_sessions, Xh, Yh, mean, std, seed, max_epochs, steps_per_epoch, width):
     import torch
     from model import StepTCN
 
@@ -80,8 +80,8 @@ def train_member(i, train_sessions, Xh, Yh, mean, std, seed, max_epochs, steps_p
     boot = [train_sessions[j] for j in rng.integers(0, len(train_sessions), len(train_sessions))]
     sampler = data.WindowSampler(boot, mean, std, rng, augment=True)
 
-    model = StepTCN()
-    opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=1e-4)
+    model = StepTCN(width=width)
+    opt =torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max_epochs)
     lossf = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(POS_WEIGHT))
     xh, yh = torch.from_numpy(Xh), torch.from_numpy(Yh)
@@ -173,8 +173,13 @@ def match_events(pred, true, tol=MATCH_TOL):
     return tp, len(pred) - tp, len(true) - tp
 
 
-def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed=0):
+def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed=0, width=None):
     import torch
+    from model import WIDTH
+
+    width = width or WIDTH
+    if width != WIDTH:
+        print(f"  width {width}: laptop experiment only, `export` will refuse it (the UNO Q needs {WIDTH})")
 
     paths = cfg["paths"]
     models_dir, reports_dir = Path(paths["models"]), Path(paths["reports"])
@@ -201,7 +206,7 @@ def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed
     for i in range(N_MEMBERS):
         print(f"  training member {i + 1}/{N_MEMBERS}")
         m, h = train_member(i, train, Xh, Yh, mean, std, seed=1000 * (seed + 1) + i,
-                            max_epochs=max_epochs, steps_per_epoch=steps_per_epoch)
+                            max_epochs=max_epochs, steps_per_epoch=steps_per_epoch, width=width)
         models.append(m)
         hists.append(h)
     print(f"  training took {(time.time() - t0) / 60:.1f} min")
@@ -212,8 +217,7 @@ def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed
     thr, thr_errs = tune_thr(held_p, held_true)
     stats = [calibration.count_stats(p, thr) for p in held_p]
     n_pred = [st[0] for st in stats]
-    r = calibration.fit_r(n_pred, held_true)
-    kappa = calibration.fit_kappa(n_pred, held_true, [st[1] for st in stats], [st[2] for st in stats], r)
+    kappa, r = calibration.fit_ml(n_pred, held_true, [st[1] for st in stats], [st[2] for st in stats])
     sig = calibration.sigma_n(n_pred, [st[1] for st in stats], [st[2] for st in stats], kappa, r)
     cov = calibration.coverage(n_pred, held_true, sig)
     calibration.plot_coverage(cov, len(held), reports_dir / "coverage.png")
@@ -243,8 +247,8 @@ def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed
 
     version = "steptcn-" + time.strftime("%Y%m%d-%H%M%S")
     ckpt = {
-        "version": version, "prep_hash": data.PREP_HASH,
-        "state_dicts": [m.state_dict() for m in models],
+        "version": version, "prep_hash": data.PREP_HASH, "width": width,
+        "state_dicts":[m.state_dict() for m in models],
         "ch_mean": mean, "ch_std": std, "thr": thr, "kappa": kappa, "r": r,
         "weinberg_K": K, "r_L": r_L, "L0_m": L0_m, "ref_x": ref_x,
         "split": {"train": [s.id for s in train], "held": [s.id for s in held]},
@@ -252,11 +256,72 @@ def run_train(cfg, include_review=False, max_epochs=30, steps_per_epoch=50, seed
     }
     torch.save(ckpt, models_dir / "ensemble.pt")
     (models_dir / "train_summary.json").write_text(json.dumps({
-        "version": version, "thr": thr, "kappa": kappa, "r": r, "weinberg_K": K, "r_L": r_L,
+        "version": version, "width": width, "thr": thr, "kappa": kappa, "r": r, "weinberg_K": K, "r_L": r_L,
         "coverage": {str(k): v for k, v in cov.items()}, "split": ckpt["split"]}, indent=2))
     print(f"  saved {models_dir / 'ensemble.pt'} ({version}); run `export` next")
 
     write_reports(cfg, models, hists, train, held, mean, std, thr, thr_errs, kappa, r, cov, K, r_L)
+
+
+def recalibrate(cfg):
+    """Refit kappa and r on the saved model's held-out sessions (no retraining), then export.
+
+    For a model trained before fit_ml existed. The threshold and weights are unchanged, so
+    only the intervals change. The old ensemble.pt and model.npz are kept as *.before-recal.*.
+    """
+    import shutil
+    import torch
+    from model import StepTCN
+
+    paths = cfg["paths"]
+    models_dir, reports_dir = Path(paths["models"]), Path(paths["reports"])
+    ck_path = models_dir / "ensemble.pt"
+    if not ck_path.exists():
+        raise SystemExit(f"{ck_path} not found: run `train` first.")
+    ck = torch.load(ck_path, weights_only=False)
+    models = []
+    for sd in ck["state_dicts"]:
+        m = StepTCN(width=ck.get("width", 32))
+        m.load_state_dict(sd)
+        models.append(m.eval())
+
+    sessions, _ = load_labelled(paths["sessions"], include_review=True)
+    by_id = {s.id: s for s in sessions}
+    train = [by_id[i] for i in ck["split"]["train"] if i in by_id]
+    held = [by_id[i] for i in ck["split"]["held"] if i in by_id]
+    missing = len(ck["split"]["held"]) - len(held)
+    if missing:
+        print(f"  WARNING: {missing} held-out session(s) are no longer in {paths['sessions']}")
+    if not held:
+        raise SystemExit("None of the model's held-out sessions are left to calibrate on.")
+
+    thr = ck["thr"]
+    held_p = [session_probs(models, s, ck["ch_mean"], ck["ch_std"]) for s in held]
+    held_true = [s.true_steps for s in held]
+    _, thr_errs = tune_thr(held_p, held_true)          # only for the report's threshold plot
+    stats = [calibration.count_stats(p, thr) for p in held_p]
+    n_pred, ev, mv = ([st[k] for st in stats] for k in range(3))
+    kappa, r = calibration.fit_ml(n_pred, held_true, ev, mv)
+    cov = calibration.coverage(n_pred, held_true, calibration.sigma_n(n_pred, ev, mv, kappa, r))
+    calibration.plot_coverage(cov, len(held), reports_dir / "coverage.png")
+    print(f"  kappa {ck['kappa']:.2f} -> {kappa:.2f}   r {ck['r']:.4f} -> {r:.4f}   ({len(held)} held-out sessions)")
+    print("  coverage (nominal -> observed): " + ", ".join(f"{k:.0%}->{v:.0%}" for k, v in cov.items()))
+
+    for name in ("ensemble.pt", "model.npz"):
+        if (models_dir / name).exists():
+            shutil.copy2(models_dir / name, models_dir / name.replace(".", ".before-recal.", 1))
+    version = ck["version"] if ck["version"].endswith("-ml") else ck["version"] + "-ml"
+    ck.update(version=version, kappa=kappa, r=r)
+    torch.save(ck, ck_path)
+    summary_path = models_dir / "train_summary.json"
+    summary = json.loads(summary_path.read_text()) if summary_path.exists() else {}
+    summary.update(version=version, kappa=kappa, r=r, coverage={str(k): v for k, v in cov.items()})
+    summary_path.write_text(json.dumps(summary, indent=2))
+    print(f"  saved {ck_path} as {version}")
+
+    write_reports(cfg, models, ck["histories"], train, held, ck["ch_mean"], ck["ch_std"], thr, thr_errs,
+                  kappa, r, cov, ck.get("weinberg_K"), ck["r_L"])
+    export(cfg)
 
 
 def _reference_window(held, mean, std):
@@ -370,12 +435,12 @@ def write_reports(cfg, models, hists, train, held, mean, std, thr, thr_errs, kap
         plt.close(fig)
         trace_imgs.append(name)
 
-    _network_diagram(rep / "network.png", param_count(), receptive_field())
+    _network_diagram(rep / "network.png", param_count(models[0]), receptive_field(), models[0].width)
 
     # Console summary against the targets in the brief
-    print("\n  Held-out count error (target: walking <= 2%, running <= 4%)")
+    print("\n  Held-out count error (target: walking <= 2%)")
     summary_html = ""
-    for cat, target in (("walk", 2.0), ("run", 4.0), ("negative", None)):
+    for cat, target in (("walk", 2.0), ("negative", None)):
         pairs = cat_err.get(cat, [])
         if not pairs:
             line = f"    {cat:8s}: no held-out sessions"
@@ -401,9 +466,9 @@ td:first-child,th:first-child{{text-align:left}}tr.train{{color:#888}}img{{max-w
 </style>
 <h1>StepTCN training report</h1>
 <p>{len(train)} training sessions, {len(held)} held-out sessions (split by session, stratified by activity).
-Ensemble of {len(models)} members, {param_count():,} parameters each.</p>
+Ensemble of {len(models)} members, width {models[0].width}, {param_count(models[0]):,} parameters each.</p>
 <h2>Held-out results</h2><ul>{summary_html}</ul>
-<p>Peak threshold <b>{thr:.2f}</b>, RMS relative error r = <b>{r:.4f}</b>, kappa = <b>{kappa:.2f}</b>.
+<p>Peak threshold <b>{thr:.2f}</b>, systematic error r = <b>{r:.4f}</b> per step, kappa = <b>{kappa:.2f}</b> (both fitted by maximum likelihood).
 Coverage (nominal &rarr; observed): {cov_txt}.
 {'<b>Calibrated on fewer than 10 sessions: treat the intervals as approximate.</b>' if len(held) < 10 else ''}</p>
 <p>Distance: {'Weinberg K = %.4f, r_L = %.3f' % (K, r_L) if K is not None else 'no calibration walks; fixed step length L0, r_L = %.2f' % r_L}.</p>
@@ -424,15 +489,15 @@ also matching the counts is the meaningful result.</p>
     print(f"\n  report: {rep / 'index.html'}")
 
 
-def _network_diagram(path, n_params, rf):
+def _network_diagram(path, n_params, rf, w=32):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     layers = [("input  12 ch x T  (100 Hz)", 0),
-              ("Conv1d 12->32, k=5, d=1 + ReLU", 12 * 32 * 5 + 32)]
+              (f"Conv1d 12->{w}, k=5, d=1 + ReLU", 12 * w * 5 + w)]
     for d in (2, 4, 8, 16):
-        layers.append((f"x + ReLU(Conv1d 32->32, k=5, d={d})", 32 * 32 * 5 + 32))
-    layers.append(("Conv1d 32->2, k=1  -> logits (R, L)", 32 * 2 + 2))
+        layers.append((f"x + ReLU(Conv1d {w}->{w}, k=5, d={d})", w * w * 5 + w))
+    layers.append((f"Conv1d {w}->2, k=1  -> logits (R, L)", w * 2 + 2))
     layers.append(("sigmoid -> p_right, p_left", 0))
     fig, ax = plt.subplots(figsize=(6, 0.7 * len(layers) + 0.8))
     for k, (name, n) in enumerate(layers):
@@ -454,7 +519,7 @@ def _network_diagram(path, n_params, rf):
 def export(cfg):
     """models/ensemble.pt -> models/model.npz (contract 8.4), verified in numpy first."""
     import torch
-    from model import StepTCN, probs, to_npz_dict
+    from model import WIDTH, StepTCN, probs, to_npz_dict
 
     models_dir = Path(cfg["paths"]["models"])
     ck_path = models_dir / "ensemble.pt"
@@ -463,6 +528,9 @@ def export(cfg):
     ck = torch.load(ck_path, weights_only=False)   # our own file, contains numpy arrays
     if ck["prep_hash"] != data.PREP_HASH:
         raise SystemExit("The checkpoint was trained with a different channel definition (prep_hash). Retrain.")
+    if ck.get("width", WIDTH) != WIDTH:
+        raise SystemExit(f"The checkpoint has width {ck['width']}, but the UNO Q only accepts width {WIDTH}. "
+                         f"Retrain without --width (or --width {WIDTH}) before exporting.")
 
     models = []
     for sd in ck["state_dicts"]:

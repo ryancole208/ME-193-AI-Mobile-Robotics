@@ -39,8 +39,8 @@ def load_config(path=None):
     path = Path(path) if path else HERE / "config.yaml"
     cfg = yaml.safe_load(path.read_text()) or {}
     cfg.setdefault("paths", {})
-    defaults = {"data": "data", "sessions": "data/sessions", "live_logs": "data/live_logs",
-                "models": "models", "reports": "reports"}
+    defaults = {"data": "data", "sessions": "data/sessions", "excluded": "data/excluded",
+                "live_logs": "data/live_logs", "models": "models", "reports": "reports"}
     for k, v in defaults.items():
         p = Path(cfg["paths"].get(k, v))
         cfg["paths"][k] = p if p.is_absolute() else HERE / p
@@ -56,7 +56,11 @@ def cmd_pull(cfg, args):
     sessions_dir = cfg["paths"]["sessions"]
     sessions_dir.mkdir(parents=True, exist_ok=True)
     listing = c.files().get("sessions", [])
-    new = 0
+    # Sessions moved into data/excluded (at any depth, e.g. excluded/run/<id>) stay out.
+    excluded_dir = cfg["paths"]["excluded"]
+    excluded = {p.name for p in excluded_dir.rglob("*") if p.is_dir() and SESSION_ID.match(p.name)} \
+        if excluded_dir.exists() else set()
+    new = skipped = 0
     for info in listing:
         sid = str(info.get("session_id", ""))
         if not SESSION_ID.match(sid):          # never let a server string become a path like ../../x
@@ -64,6 +68,9 @@ def cmd_pull(cfg, args):
             continue
         if info.get("recording"):
             print(f"  {sid}: still recording, skipped")
+            continue
+        if sid in excluded:
+            skipped += 1
             continue
         d = sessions_dir / sid
         if (d / ".pulled").exists():
@@ -91,7 +98,8 @@ def cmd_pull(cfg, args):
         if complete:
             (d / ".pulled").write_text(time.strftime("%Y-%m-%d %H:%M:%S"))
             new += 1
-    print(f"  pulled {new} new session(s) into {sessions_dir}")
+    print(f"  pulled {new} new session(s) into {sessions_dir}"
+          + (f"; {skipped} in {excluded_dir.name}/ skipped" if skipped else ""))
 
 
 def cmd_truth(cfg, args):
@@ -123,7 +131,12 @@ def cmd_label(cfg, args):
 
 def cmd_train(cfg, args):
     import train
-    train.run_train(cfg, args.include_review, args.epochs, args.steps, args.seed)
+    train.run_train(cfg, args.include_review, args.epochs, args.steps, args.seed, args.width)
+
+
+def cmd_recalibrate(cfg, args):
+    import train
+    train.recalibrate(cfg)
 
 
 def cmd_export(cfg, args):
@@ -256,8 +269,12 @@ def main():
     p.add_argument("--epochs", type=int, default=30, help="max epochs per member (early stopping usually ends sooner)")
     p.add_argument("--steps", type=int, default=50, help="batches per epoch")
     p.add_argument("--seed", type=int, default=0, help="changes the split and the member seeds")
+    p.add_argument("--width", type=int, default=None,
+                   help="channels per layer (default 32; other widths can't be exported to the UNO Q)")
     p.set_defaults(fn=cmd_train)
 
+    sub.add_parser("recalibrate", help="refit kappa and r on the saved model, then export (no retraining)"
+                   ).set_defaults(fn=cmd_recalibrate)
     sub.add_parser("export", help="write models/model.npz").set_defaults(fn=cmd_export)
 
     p = sub.add_parser("upload", help="send model.npz to the UNO Q")

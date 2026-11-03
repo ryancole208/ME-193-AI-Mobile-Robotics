@@ -101,6 +101,7 @@ canvas { width: 100%; display: block; }
         <div><span class="big" id="dist">–</span> <span class="sub" id="distUnit">m</span></div>
         <div class="sub" id="distCI">95% interval –</div>
       </div>
+      <div><button class="danger" id="resetCount" title="Sets the UNO Q's count back to 0 (starts a new session)">Reset count</button></div>
     </div>
   </section>
 
@@ -210,10 +211,28 @@ async function pollHistory() {
   try { H = await (await fetch("/local/history?minutes=2", { cache: "no-store" })).json(); } catch (e) {}
   drawTimeline();
 }
-setInterval(poll, 400);
-setInterval(pollHistory, 2000);
+setInterval(poll, 250);
+setInterval(pollHistory, 1000);
 poll(); pollHistory();
 window.addEventListener("resize", draw);
+
+// The UNO Q sends new samples in 0.5 s chunks. To scroll smoothly, the plot runs its own clock
+// LAG_S behind the newest sample, nudged towards it, and never past it.
+const LAG_S = 0.75;
+const view = { t1: null, at: 0 };
+function viewT1() {
+  if (!S) return 0;
+  const latest = S.now_t, target = latest - LAG_S, now = performance.now();
+  if (view.t1 === null || Math.abs(target - view.t1) > 3) view.t1 = target;   // first frame, reboot or long stall
+  else {
+    const dt = Math.min((now - view.at) / 1000, 0.5);
+    view.t1 += dt + (target - view.t1) * Math.min(1, 1.5 * dt);
+  }
+  view.at = now;
+  return view.t1 = Math.min(view.t1, latest);
+}
+function frame() { drawPlot(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
 
 // ------------------------------------------------------------------ helpers
 const fmt = (x, d = 0) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toFixed(d);
@@ -253,7 +272,9 @@ function render() {
   const n = st.steps, sig = st.steps_sigma || 0;
   const ci = st.steps_ci || [n - 1.96 * sig, n + 1.96 * sig];
   $("steps").textContent = fmt(n);
-  $("stepsCI").textContent = `95% interval ${fmt(ci[0])} – ${fmt(ci[1])}   ·   σ = ${fmt(sig, 1)}`;
+  // ci comes from the UNO Q (N ± 1.96σ, clipped); show the half-width too so it can't be misread.
+  $("stepsCI").innerHTML = `95% interval: ${fmt(ci[0])} to ${fmt(ci[1])} steps (${fmt(n)} ± ${fmt((ci[1] - ci[0]) / 2)})` +
+    `<br>standard deviation σ = ${fmt(sig, 1)} steps`;
   const half = Math.max(4 * sig, 5), lo = n - half, span = 2 * half;
   const bar = $("stepsBar");
   bar.querySelector(".ci").style.left = `${100 * (ci[0] - lo) / span}%`;
@@ -262,8 +283,9 @@ function render() {
 
   const f = M_PER[u] || 1, d = st.dist_m, ds = st.dist_sigma_m || 0;
   $("dist").textContent = fmt(d * f, u === "km" || u === "mi" ? 3 : 1);
-  $("distCI").textContent = d == null ? "95% interval –" :
-    `95% interval ${fmt(Math.max(0, d - 1.96 * ds) * f, 2)} – ${fmt((d + 1.96 * ds) * f, 2)} ${u}   ·   σ = ${fmt(ds * f, 2)} ${u}`;
+  $("distCI").innerHTML = d == null ? "95% interval –" :
+    `95% interval: ${fmt(Math.max(0, d - 1.96 * ds) * f, 2)} to ${fmt((d + 1.96 * ds) * f, 2)} ${u} (${fmt(d * f, 2)} ± ${fmt(1.96 * ds * f, 2)})` +
+    `<br>standard deviation σ = ${fmt(ds * f, 2)} ${u}`;
   // The UNO Q's own display setting decides which number is the headline.
   const showDist = st.display === "distance";
   $("stepsBox").className = showDist ? "dim" : "";
@@ -389,7 +411,7 @@ function draw() { drawPlot(); drawTimeline(); }
 function drawPlot() {
   const { ctx, w, h } = fit($("plot"));
   const s = S && S.stream;
-  const t1 = S ? S.now_t : 0, t0 = t1 - 10;
+  const t1 = viewT1(), t0 = t1 - 10;
   const L = 48, R = 8, gap = 12;
   const panels = [
     { keys: ["ankle_gz"], label: "ankle gz (°/s)", colors: [css("--fg")] },
@@ -404,7 +426,7 @@ function drawPlot() {
     let lo = Infinity, hi = -Infinity;
     if (p.range) [lo, hi] = p.range;
     else if (s) for (const key of p.keys) for (let i = 0; i < s.t.length; i++) {
-      const v = s[key][i]; if (v == null || s.t[i] < t0) continue; lo = Math.min(lo, v); hi = Math.max(hi, v);
+      const v = s[key][i]; if (v == null || s.t[i] < t0 || s.t[i] > t1) continue; lo = Math.min(lo, v); hi = Math.max(hi, v);
     }
     if (!isFinite(lo)) { lo = -1; hi = 1; }
     if (hi - lo < 1e-6) { lo -= 1; hi += 1; }
@@ -428,6 +450,7 @@ function drawPlot() {
       for (let i = 0; i < s.t.length; i++) {
         const v = s[key][i];
         if (v == null || s.t[i] < t0) { pen = false; continue; }
+        if (s.t[i] > t1) break;
         if (!pen) { ctx.moveTo(X(s.t[i]), Y(v)); pen = true; } else ctx.lineTo(X(s.t[i]), Y(v));
       }
       ctx.stroke();
@@ -436,7 +459,7 @@ function drawPlot() {
   // committed events on the probability panel: NN filled dots, baseline hollow rings
   const pp = panels[2];
   for (const e of (S && S.events) || []) {
-    if (e.deleted || e.t < t0 || e.t > t1 + 0.5) continue;
+    if (e.deleted || e.t < t0 || e.t > t1) continue;
     const col = e.foot === "L" ? css("--left") : css("--right");
     const x = X(e.t), y = pp.Y(Math.min(1, Math.max(0, e.conf ?? 1)));
     ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 2 * Math.PI);
@@ -494,7 +517,11 @@ $("start").onclick = async () => {
 $("stop").onclick = () => cmd("session/stop");
 $("mode").onchange = (e) => cmd("mode", { mode: e.target.value });
 $("display").onchange = (e) => cmd("display", { show: e.target.value });
-$("reset").onclick = () => { if (confirm("Reset the live count on the UNO Q?")) cmd("reset"); };
+$("reset").onclick = $("resetCount").onclick = async () => {
+  if (!confirm("Reset the step count on the UNO Q to 0? This starts a new session.")) return;
+  const j = await cmd("reset");
+  if (j && j.session_id) { lastSession = j.session_id; $("tSession").value = j.session_id; }
+};
 $("tSave").onclick = () => {
   const sid = $("tSession").value.trim(), steps = parseInt($("tSteps").value, 10);
   if (!sid || Number.isNaN(steps) || steps < 0) { say("enter a session id and a whole number of steps", true); return; }

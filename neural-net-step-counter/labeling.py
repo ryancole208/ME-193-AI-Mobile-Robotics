@@ -19,7 +19,7 @@ import numpy as np
 import baseline
 from data import FS, HIP_VERT
 
-GZ_SWEEP = np.arange(60.0, 200.0 + 1e-9, 10.0)           # deg/s
+GZ_SWEEP = np.arange(60.0, 400.0 + 1e-9, 10.0)           # deg/s; brisk walks need 200-330
 PROM_SWEEP = np.round(np.arange(0.05, 0.40 + 1e-9, 0.05), 3)  # g
 
 

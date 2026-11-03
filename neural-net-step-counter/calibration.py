@@ -10,10 +10,16 @@ The UNO Q reports N +- 1.96 sigma_N, with
   model:      the 5 ensemble members disagree on the count; their spread is the
               model's own uncertainty.
   systematic: errors that grow with the count (e.g. a consistently missed
-              shuffle step), measured as the RMS relative error r.
+              shuffle step), r per step.
   kappa >= 1: an honesty factor. The first two terms are usually over-confident,
-              so we inflate them until 95% of held-out true counts really do fall
-              inside the 95% interval.
+              so we inflate them.
+
+kappa and r are fitted together by maximum likelihood (fit_ml): the held-out
+errors N - T are treated as normal with this sigma_N. Compared on the held-out
+sessions with leave-one-out, this covered as many true counts as the older
+fit_r + fit_kappa (RMS relative r, then kappa for 95% coverage) with intervals
+about half as wide: the RMS relative error is dominated by short walks, where
+a few steps off is a large fraction.
 
 All of this is fitted on the held-out sessions only. With ~5 held-out sessions
 the numbers are rough; we say so in the output rather than pretend otherwise.
@@ -62,6 +68,23 @@ def fit_r(n_pred, n_true):
         print("  WARNING: no held-out sessions with steps; using r = 0.05")
         return 0.05
     return float(np.sqrt(np.mean(((n_pred[m] - n_true[m]) / n_true[m]) ** 2)))
+
+
+def fit_ml(n_pred, n_true, ev, mv):
+    """(kappa, r) maximising the normal likelihood of the held-out count errors.
+
+    A grid search (kappa 1-6 in 0.01, r 0-0.4 in 0.001): two parameters, a dozen
+    sessions, so brute force is instant and can't land in a local optimum.
+    """
+    n_pred, n_true = np.asarray(n_pred, float), np.asarray(n_true, float)
+    base = np.asarray(ev, float) + np.asarray(mv, float)
+    K, R = np.meshgrid(np.arange(1.0, 6.0001, 0.01), np.arange(0.0, 0.4001, 0.001), indexing="ij")
+    var = K[..., None] ** 2 * base + (R[..., None] * n_pred) ** 2 + 1e-9
+    nll = np.sum(0.5 * np.log(var) + 0.5 * (n_pred - n_true) ** 2 / var, axis=-1)
+    i, j = np.unravel_index(np.argmin(nll), nll.shape)
+    if i == K.shape[0] - 1 or j == R.shape[1] - 1:
+        print("  WARNING: the kappa / r fit hit the edge of its grid; check the held-out labels.")
+    return float(K[i, j]), float(R[i, j])
 
 
 def fit_kappa(n_pred, n_true, ev, mv, r, target=0.95, kappa_max=20.0):

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finger-Count Safe — Collect</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <div class="dial" aria-hidden="true"></div>
+    <h1>Finger-Count Safe</h1>
+    <nav class="nav"><a href="/">Live</a><a href="/collect" class="active">Collect</a></nav>
+  </header>
+
+  <main class="layout collect">
+    <section class="panel viewer">
+      <div class="screen">
+        <img id="feed" src="/video_feed?overlay=collect" alt="Live webcam feed with crop outline">
+        <div id="countdown" class="countdown" hidden></div>
+        <div id="offline" class="offline" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <p id="offline-msg">Camera disconnected — reconnecting…</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>Session</h2>
+        <label class="field">Session ID
+          <input id="session" type="text" spellcheck="false" autocomplete="off">
+        </label>
+        <p class="muted small">Training sessions: <code>train1</code>, <code>train2</code>. Validation session (held out, ideally different lighting): <code>val1</code>. Any ID starting with <code>val</code> is validation.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Fingers <span class="muted small">(keys 0–5)</span></h2>
+        <div id="classes" class="class-grid"></div>
+        <p id="howto" class="howto"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Burst <span class="muted small">(Space)</span></h2>
+        <div class="row">
+          <label class="field">Seconds <input id="seconds" type="number" min="0.5" max="60" step="0.5"></label>
+          <label class="field">Rate (fps) <input id="fps" type="number" min="1" max="30" step="1"></label>
+        </div>
+        <button id="burst" class="btn primary">Start burst</button>
+        <div class="progress"><div id="bar"></div></div>
+        <p id="msg" class="muted small"></p>
+        <button id="undo" class="btn" disabled>Undo last burst</button>
+      </section>
+    </aside>
+
+    <section class="panel counts">
+      <h2>Images per class <span class="muted small">(target <span id="target"></span> each; highlighted = below target)</span></h2>
+      <div class="table-wrap"><table id="counts"></table></div>
+    </section>
+  </main>
+
+  <script>window.PAGE_CFG = {{ page_cfg | tojson }};</script>
+  <script src="{{ url_for('static', filename='collect.js') }}"></script>
+</body>
+</html>

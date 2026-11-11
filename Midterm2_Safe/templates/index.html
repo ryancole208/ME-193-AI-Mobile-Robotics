@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finger-Count Safe</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <div class="dial" aria-hidden="true"></div>
+    <h1>Finger-Count Safe</h1>
+    <nav class="nav"><a href="/" class="active">Live</a><a href="/collect">Collect</a></nav>
+  </header>
+
+  <main class="layout">
+    <section class="panel viewer">
+      <div class="screen">
+        <img id="feed" src="{{ url_for('video_feed') }}" alt="Live webcam feed">
+        <div id="offline" class="offline" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <p id="offline-msg">Camera disconnected — reconnecting…</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>Status</h2>
+        <dl class="stats">
+          <dt>Camera</dt>
+          <dd><span id="dot" class="dot"></span><span id="conn">Connecting…</span></dd>
+          <dt>Index</dt><dd id="index">—</dd>
+          <dt>Resolution</dt><dd id="res">—</dd>
+          <dt>FPS</dt><dd id="fps">—</dd>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Finger count</h2>
+        <p id="pred-empty" class="muted">Model not loaded (train first, then restart the app)</p>
+        <div id="pred" hidden>
+          <div class="count-row"><span id="count" class="big-count">–</span>
+            <span class="muted">confidence <b id="conf">–</b></span></div>
+          <div id="bars" class="bars"></div>
+          <p class="muted small"><span id="ims">–</span> ms / frame · <span id="ifps">–</span> fps · model <span id="model">–</span></p>
+        </div>
+      </section>
+
+      <section class="panel lock">
+        <h2>Safe</h2>
+        <div id="leds" class="leds"></div>
+        <div id="digits" class="digits"></div>
+        <div class="hold"><div id="hold-bar"></div></div>
+        <p id="lock-msg" class="lock-msg">Push the button to wake the safe</p>
+        <div id="result" class="result" hidden></div>
+        <div class="row">
+          <button id="press" class="btn primary">Push button</button>
+          <button id="reset" class="btn">Reset</button>
+        </div>
+        <p class="muted small">Hold each number steady for 1 s. Each number must differ from the last.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

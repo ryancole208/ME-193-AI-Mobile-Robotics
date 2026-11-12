@@ -1,0 +1,233 @@
+// Finger-Count Safe: the microcontroller half.
+//
+// Python (python/main.py) runs the camera + finger-count model and the lock
+// logic, then calls update_state() over the Bridge. This sketch only:
+//   - reads the push button and tells Python (Bridge.call("button_pressed")),
+//   - draws the state on the 13x8 LED matrix,
+//   - steps the two latch servos through UNLOCK_SEQ on UNLOCKED (one servo per
+//     step), then back through it in reverse OPEN_MS after it is fully open.
+
+#include <Arduino_RouterBridge.h>
+#include <Arduino_LED_Matrix.h>
+#include <string.h>
+
+// ===================== HARDWARE — CHECK BEFORE FIRST RUN =====================
+const int BUTTON_PIN = 2;          // push button between D2 and GND (internal pull-up;
+                                   // with nothing connected it reads "not pressed")
+// Two latch servos. Signal wires on D9 and D10; power them from a separate 5 V
+// supply with its GND tied to the board's GND.
+const int NUM_SERVOS = 2;
+const int SERVO_PINS[NUM_SERVOS] = {9, 10};
+// Servo 2 angle with the arm resting above the door (blocks it). Set with
+// servo_calibrate.py (N key). 97 = placeholder (same as open) until calibrated.
+const int LOCK_REST_DEG = 75;
+// Positions {servo 1, servo 2}, from LOCKED (first) to OPEN (last). Each step
+// moves only one servo. Re-locking runs the same list backwards.
+const int UNLOCK_SEQ[][NUM_SERVOS] = {
+    {0, LOCK_REST_DEG},   // locked: arm resting above the door
+    {0, 97},
+    {30, 97},
+    {30, 67},
+    {0, 67},
+    {0, 97},              // open
+};
+const int SEQ_LEN = sizeof(UNLOCK_SEQ) / sizeof(UNLOCK_SEQ[0]);
+const unsigned long STEP_MS = 700;         // time for each one-servo move
+const unsigned long OPEN_MS = 8000;        // stay fully open this long, then re-lock
+const unsigned long SERVO_ACTIVE_MS = 1000; // keep pulsing this long after the last step, then go quiet
+// =============================================================================
+
+// Modes sent by python/main.py (keep in sync with MODE_* there).
+const int MODE_ASLEEP = 0;
+const int MODE_AWAKE = 1;
+const int MODE_UNLOCKED = 2;
+const int MODE_LOCKED = 3;   // wrong code
+const int MODE_ERROR = 4;    // no model / no camera on the Linux side
+
+// ----- State written by update_state() (Bridge thread), read in loop() -----
+volatile int mode = MODE_ERROR;
+volatile int digitsEntered = 0;
+volatile int liveCount = -1;     // smoothed finger count, -1 = unknown
+volatile int holdPercent = 0;    // 0-100 progress of holding the current number
+volatile bool gotUpdate = false;
+
+void update_state(int newMode, int digits, int count, int progress) {
+    mode = newMode;
+    digitsEntered = digits;
+    liveCount = count;
+    holdPercent = progress;
+    gotUpdate = true;
+}
+
+// ----- LED matrix -----
+Arduino_LED_Matrix matrix;
+const int ROWS = 8;
+const int COLS = 13;
+uint8_t frame[ROWS * COLS];
+
+void px(int r, int c, uint8_t v) {
+    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) frame[r * COLS + c] = v;
+}
+
+void drawAwake(unsigned long now) {
+    // Row 0: three code slots (cols 0-2, 5-7, 10-12): bright once entered, dim otherwise.
+    for (int s = 0; s < 3; s++) {
+        uint8_t v = (s < digitsEntered) ? 7 : 1;
+        for (int c = 0; c < 3; c++) px(0, s * 5 + c, v);
+    }
+    // Rows 2-7: one vertical bar per finger seen (cols 2,4,6,8,10). Bars grow
+    // from 2 to 6 pixels tall while the number is being held.
+    int n = liveCount;
+    if (n < 0) n = 0;
+    if (n > 5) n = 5;
+    int height = 2 + (holdPercent * 4) / 100;
+    for (int f = 0; f < n; f++) {
+        for (int h = 0; h < height; h++) px(7 - h, 2 + f * 2, holdPercent > 0 ? 7 : 3);
+    }
+    if (n == 0 && (now / 500) % 2) px(5, 6, 2);   // blinking dot = "show me a number"
+}
+
+void drawCheck() {
+    const int pts[][2] = {{4, 3}, {5, 4}, {6, 5}, {5, 6}, {4, 7}, {3, 8}, {2, 9}, {1, 10}};
+    for (auto &p : pts) px(p[0], p[1], 7);
+}
+
+void drawX() {
+    for (int i = 0; i < 7; i++) {
+        px(i, 3 + i, 7);
+        px(i, 9 - i, 7);
+    }
+}
+
+void drawMatrix(unsigned long now) {
+    memset(frame, 0, sizeof(frame));
+    switch (mode) {
+        case MODE_ASLEEP:
+            if ((now / 1000) % 2) px(7, 12, 1);   // slow dim blink = alive, asleep
+            break;
+        case MODE_AWAKE:
+            drawAwake(now);
+            break;
+        case MODE_UNLOCKED:
+            drawCheck();
+            break;
+        case MODE_LOCKED:
+            drawX();
+            break;
+        default:  // MODE_ERROR or no Python yet: blinking "!"
+            if ((now / 300) % 2) {
+                for (int r = 1; r <= 4; r++) px(r, 6, 7);
+                px(6, 6, 7);
+            }
+    }
+    matrix.draw(frame);
+}
+
+// ----- Servos: plain 50 Hz pulses (no Servo library needed) -----
+int seqPos = 0;                  // current index in UNLOCK_SEQ (0 = locked)
+int seqTarget = 0;               // 0 = go to locked, SEQ_LEN - 1 = go to open
+unsigned long lastStepMs = 0;
+unsigned long servoMovedMs = 0;
+unsigned long lastPulseUs = 0;
+
+// One step every STEP_MS toward seqTarget. Returns true when it just arrived.
+bool sequenceService(unsigned long now) {
+    if (seqPos == seqTarget || now - lastStepMs < STEP_MS) return false;
+    seqPos += (seqTarget > seqPos) ? 1 : -1;
+    lastStepMs = now;
+    servoMovedMs = now;
+    Monitor.print("step ");
+    Monitor.print(seqPos);
+    Monitor.print(": ");
+    Monitor.print(UNLOCK_SEQ[seqPos][0]);
+    Monitor.print(", ");
+    Monitor.println(UNLOCK_SEQ[seqPos][1]);
+    return seqPos == seqTarget;
+}
+
+void servoService() {
+    if (millis() - servoMovedMs > SERVO_ACTIVE_MS) return;   // quiet: no buzz, latch holds
+    unsigned long nowUs = micros();
+    if (nowUs - lastPulseUs < 20000) return;
+    lastPulseUs = nowUs;
+    for (int i = 0; i < NUM_SERVOS; i++) {   // one pulse after the other, ~0.5-2.4 ms each
+        int deg = UNLOCK_SEQ[seqPos][i];
+        int us = map(constrain(deg, 0, 180), 0, 180, 544, 2400);
+        digitalWrite(SERVO_PINS[i], HIGH);
+        delayMicroseconds(us);
+        digitalWrite(SERVO_PINS[i], LOW);
+    }
+}
+
+// ----- Button -----
+int lastButton = HIGH;
+unsigned long lastButtonChangeMs = 0;
+
+void buttonService(unsigned long now) {
+    int b = digitalRead(BUTTON_PIN);
+    if (b != lastButton && now - lastButtonChangeMs > 30) {   // 30 ms debounce
+        lastButtonChangeMs = now;
+        lastButton = b;
+        if (b == LOW) {
+            Monitor.println("button pressed");
+            bool ok = false;
+            Bridge.call("button_pressed").result(ok);
+        }
+    }
+}
+
+// ----- Main -----
+int lastMode = -1;
+unsigned long openedMs = 0;
+bool isOpen = false;
+
+void setup() {
+    Monitor.begin(115200);
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        pinMode(SERVO_PINS[i], OUTPUT);
+        digitalWrite(SERVO_PINS[i], LOW);
+    }
+    seqPos = seqTarget = 0;
+    servoMovedMs = millis();          // drive to LOCKED at power-up
+
+    matrix.begin();
+    matrix.setGrayscaleBits(3);       // brightness 0-7
+    matrix.clear();
+
+    Bridge.begin();
+    Bridge.provide("update_state", update_state);
+}
+
+void loop() {
+    unsigned long now = millis();
+
+    buttonService(now);
+
+    int m = mode;
+    if (m != lastMode) {
+        lastMode = m;
+        if (m == MODE_UNLOCKED) {
+            Monitor.println("UNLOCKED: running unlock sequence");
+            seqTarget = SEQ_LEN - 1;
+            isOpen = false;
+        }
+    }
+    if (sequenceService(now) && seqTarget == SEQ_LEN - 1) {
+        Monitor.println("fully open");
+        isOpen = true;
+        openedMs = now;
+    }
+    if (isOpen && now - openedMs > OPEN_MS) {
+        Monitor.println("re-locking (reverse sequence)");
+        seqTarget = 0;
+        isOpen = false;
+    }
+    servoService();
+
+    static unsigned long lastDrawMs = 0;
+    if (now - lastDrawMs >= 40) {     // ~25 fps matrix refresh
+        lastDrawMs = now;
+        drawMatrix(now);
+    }
+}

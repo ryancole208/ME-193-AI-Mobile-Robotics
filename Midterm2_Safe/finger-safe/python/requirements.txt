@@ -1,0 +1,3 @@
+onnxruntime
+# numpy and OpenCV (cv2) come preinstalled in the board's App Lab Python image.
+# Listing opencv-python-headless here fails: the image pins its own build.

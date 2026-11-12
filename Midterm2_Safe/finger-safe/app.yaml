@@ -1,0 +1,5 @@
+name: Finger Safe
+description: Counts fingers under a USB camera with a from-scratch CNN (ONNX); three different numbers 1-5 open the servo latch. LED matrix shows progress.
+icon: 🔐
+ports: [8770]   # laptop camera stream (stream_to_unoq.py via adb forward)
+bricks: []

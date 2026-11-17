@@ -1,0 +1,2 @@
+# pwm_scale=1.00 timeout_s=10 started=2026-11-17 01:22:17
+step,t_s,obs_wx,obs_wy,obs_wz,obs_sin_yaw,obs_cos_yaw,obs_prev_act_L,obs_prev_act_R,act_L,act_R,duty_L,duty_R,roll,pitch,tilt,yaw,compute_us

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Silly Walk Sim</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 16px; background: #f6f7f9; color: #1d2329; }
+  h1 { font-size: 1.4rem; margin: 0 0 12px; }
+  .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  label { display: block; margin: 8px 0 4px; font-weight: 600; }
+  input[type=range] { width: 100%; }
+  input[type=number] { width: 80px; font-size: 1rem; padding: 4px; }
+  button { font-size: 1.2rem; padding: 14px; border: 0; border-radius: 10px; width: 100%; margin-top: 10px; color: #fff; cursor: pointer; }
+  #start { background: #2e7d32; }
+  #stop { background: #c62828; font-size: 1.6rem; padding: 22px; }
+  #state { font-size: 1.2rem; font-weight: 700; }
+  .muted { color: #5f6b76; font-size: .9rem; }
+  ul { padding-left: 18px; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<h1>🦿 Silly Walk Sim</h1>
+
+<div class="card">
+  <div>Status: <span id="state">…</span></div>
+  <div id="result" class="muted"></div>
+</div>
+
+<div class="card">
+  <label for="scale">PWM scale: <span id="scaleVal">0.50</span></label>
+  <input id="scale" type="range" min="0.1" max="1" step="0.05" value="0.5">
+  <div class="muted">Multiplies every motor command. Start gentle (0.3–0.5), go to 1.0 to match the sim.</div>
+  <label for="timeout">Run time (s)</label>
+  <input id="timeout" type="number" min="1" max="30" value="10"> <span class="muted">training episodes were 10 s</span>
+  <button id="start">Start (keep the robot still for 1 s)</button>
+  <button id="stop">STOP</button>
+</div>
+
+<div class="card">
+  <strong>Logs</strong> <span class="muted">(also in ~/ArduinoApps/silly-walk-sim/logs/)</span>
+  <ul id="logs"></ul>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+$("scale").oninput = () => $("scaleVal").textContent = Number($("scale").value).toFixed(2);
+
+async function get(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  return r.json();
+}
+
+$("start").onclick = async () => {
+  const res = await get(`/api/start?scale=${$("scale").value}&timeout=${$("timeout").value}`);
+  if (!res.ok) alert("Could not start: " + res.error);
+};
+$("stop").onclick = () => get("/api/stop");
+
+async function refresh() {
+  try {
+    const s = await get("/api/status");
+    $("state").textContent = s.state;
+    $("result").textContent = s.last_result;
+    const l = await get("/api/logs");
+    $("logs").innerHTML = l.files.slice(0, 15)
+      .map((f) => `<li><a href="/api/logs/${f}" download>${f}</a></li>`).join("");
+  } catch (e) {
+    $("state").textContent = "no connection to the board";
+  }
+}
+setInterval(refresh, 700);
+refresh();
+</script>
+</body>
+</html>

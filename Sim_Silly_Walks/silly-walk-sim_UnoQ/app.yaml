@@ -1,0 +1,5 @@
+name: Silly Walk Sim
+icon: 🦿
+description: Deploy a sim-trained (mjlab) RL walking policy on a two-arm robot with an MPU-6050 IMU and open-loop DC motors.
+bricks:
+  - arduino:web_ui

@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape https://cad.onshape.com/documents/82003ade9e4f71e634193b30/w/f56b5c1c3aed1d0a91af11f3/e/d09b326e720a88f1fcc74fe9 -->
+<mujoco model="onshape">
+  <compiler angle="radian" meshdir="assets" autolimits="true"/>
+  <default>
+    <default class="onshape">
+      <joint frictionloss="0.1" armature="0.005"/>
+      <position kp="50" dampratio="1"/>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom group="3"/>
+      </default>
+    </default>
+  </default>
+  <worldbody>
+    <!-- Link chassis -->
+    <body name="chassis" pos="0 0 0" quat="1 0 0 0" childclass="onshape">
+      <inertial pos="-0.0713271 -0.00146015 -0.0134945" mass="1.09659" fullinertia="0.00122357 0.000682352 0.00172772 3.41405e-05 -5.16985e-05 2.10443e-05"/>
+      <!-- Part brep_1 -->
+      <geom type="mesh" class="visual" pos="0.419719 -0.0978541 -0.0146987" quat="1 0 0 -0" mesh="brep_1" material="brep_1_material"/>
+      <geom type="mesh" class="collision" pos="0.419719 -0.0978541 -0.0146987" quat="1 0 0 -0" mesh="brep_1" material="brep_1_material"/>
+      <!-- Part chassis -->
+      <geom type="mesh" class="visual" pos="-0.0136293 0.0131082 -0.00176515" quat="0.707107 0 0 -0.707107" mesh="chassis" material="chassis_material"/>
+      <geom type="mesh" class="collision" pos="-0.0136293 0.0131082 -0.00176515" quat="0.707107 0 0 -0.707107" mesh="chassis" material="chassis_material"/>
+      <!-- Part part_1 -->
+      <geom type="mesh" class="visual" pos="0.0047759 0.0578082 -0.0249032" quat="0.707107 0 0 -0.707107" mesh="part_1" material="part_1_material"/>
+      <geom type="mesh" class="collision" pos="0.0047759 0.0578082 -0.0249032" quat="0.707107 0 0 -0.707107" mesh="part_1" material="part_1_material"/>
+      <!-- Part part_1_2 -->
+      <geom type="mesh" class="visual" pos="0.0047759 -0.0595918 -0.0249032" quat="0.707107 0 0 -0.707107" mesh="part_1" material="part_1_material"/>
+      <geom type="mesh" class="collision" pos="0.0047759 -0.0595918 -0.0249032" quat="0.707107 0 0 -0.707107" mesh="part_1" material="part_1_material"/>
+      <!-- Part part_1_3 -->
+      <geom type="mesh" class="visual" pos="-0.077643 -0.00089175 -0.0267652" quat="0.707107 0 0 -0.707107" mesh="part_1__2" material="part_1__2_material"/>
+      <geom type="mesh" class="collision" pos="-0.077643 -0.00089175 -0.0267652" quat="0.707107 0 0 -0.707107" mesh="part_1__2" material="part_1__2_material"/>
+      <!-- Part part_1_4 -->
+      <geom type="mesh" class="visual" pos="-0.107509 -0.00089175 -0.0297652" quat="0.5 0.5 0.5 -0.5" mesh="part_1__3" material="part_1__3_material"/>
+      <geom type="mesh" class="collision" pos="-0.107509 -0.00089175 -0.0297652" quat="0.5 0.5 0.5 -0.5" mesh="part_1__3" material="part_1__3_material"/>
+      <!-- Link left_wheel -->
+      <body name="left_wheel" pos="0.0047759 0.0668082 -0.0136832" quat="0.707107 -0.707107 0 0">
+        <!-- Joint from chassis to left_wheel -->
+        <joint axis="0 0 1" name="left_wheel"/>
+        <inertial pos="0.00633196 0.0098316 6.22285e-06" mass="0.00759861" fullinertia="5.44971e-06 5.9405e-06 1.13446e-05 -5.2012e-06 2.99e-10 4.65e-10"/>
+        <!-- Part left_wheel -->
+        <geom type="mesh" class="visual" pos="-0 0 -0.003" quat="0.630139 -0.630139 0.32082 -0.32082" mesh="left_wheel" material="left_wheel_material"/>
+        <geom type="mesh" class="collision" pos="-0 0 -0.003" quat="0.630139 -0.630139 0.32082 -0.32082" mesh="left_wheel" material="left_wheel_material"/>
+      </body>
+      <!-- Link right_wheel -->
+      <body name="right_wheel" pos="0.0047759 -0.0685918 -0.0136832" quat="0.707107 -0.707107 0 0">
+        <!-- Joint from chassis to right_wheel -->
+        <joint axis="0 0 1" name="right_wheel"/>
+        <inertial pos="-0 -0 -6.29417e-06" mass="0.00751251" fullinertia="6.49982e-06 7.81085e-06 1.42656e-05 7.01154e-06 -0 -0"/>
+        <!-- Part right_wheel -->
+        <geom type="mesh" class="visual" pos="-0 0 0.003" quat="0.65941 0.65941 -0.255301 -0.255301" mesh="right_wheel" material="right_wheel_material"/>
+        <geom type="mesh" class="collision" pos="-0 0 0.003" quat="0.65941 0.65941 -0.255301 -0.255301" mesh="right_wheel" material="right_wheel_material"/>
+      </body>
+    </body>
+  </worldbody>
+  <asset>
+    <mesh file="chassis.stl"/>
+    <mesh file="part_1__3.stl"/>
+    <mesh file="right_wheel.stl"/>
+    <mesh file="part_1.stl"/>
+    <mesh file="left_wheel.stl"/>
+    <mesh file="part_1__2.stl"/>
+    <mesh file="brep_1.stl"/>
+    <material name="brep_1_material" rgba="0 0 0 1"/>
+    <material name="chassis_material" rgba="0.498039 0.498039 0.498039 1"/>
+    <material name="part_1_material" rgba="0.615686 0.811765 0.929412 1"/>
+    <material name="part_1__2_material" rgba="0.615686 0.811765 0.929412 1"/>
+    <material name="part_1__3_material" rgba="0.615686 0.811765 0.929412 1"/>
+    <material name="left_wheel_material" rgba="0.615686 0.811765 0.929412 1"/>
+    <material name="right_wheel_material" rgba="0.615686 0.811765 0.929412 1"/>
+  </asset>
+  <actuator>
+    <position class="onshape" name="left_wheel" joint="left_wheel"/>
+    <position class="onshape" name="right_wheel" joint="right_wheel"/>
+  </actuator>
+  <equality/>
+</mujoco>
